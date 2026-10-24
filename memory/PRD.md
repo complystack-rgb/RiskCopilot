@@ -45,6 +45,10 @@ collect information. India-specific fields and INR bands.
 - Fixes: products shown only if made for the business's sector; narrative grammar ("an IT");
   size line names the actual top-2 exposure areas; no repeated top-area line. Verified (iteration_3).
 
+## Iteration 4 (2026-06)
+- Header (landing + journey): real Zurich logo + "Powered by" ComplyStack logo (`components/BrandBar.jsx`, `/public/brand/*.png`).
+- Landing: removed trust cards, product grid and "Explore cover" button.
+
 ## Backlog / remaining (prioritised)
 - P1: Connect MongoDB backend to persist journeys server-side (user said "connect DB later").
 - P1: Real policy PDF analysis via an LLM integration (replace simulated read).
