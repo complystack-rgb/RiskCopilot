@@ -1,0 +1,64 @@
+import { useJourney } from "@/context/JourneyContext";
+import { SectionHeader, WhyThisMatters, FieldLabel, UploadField, RewardCard } from "./shared";
+import { Input } from "@/components/ui/input";
+import * as Icons from "lucide-react";
+
+export default function Step6Evidence() {
+  const { data, update } = useJourney();
+  const md = data.machineryDetails;
+  const setMd = (patch) => update({ machineryDetails: { ...md, ...patch } });
+  const setList = (key) => (v) => update((prev) => ({ [key]: typeof v === "function" ? v(prev[key]) : v }));
+  const totalFiles = data.premisesMedia.length + data.machineryPhotos.length + data.evidencePolicyDocs.length;
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader eyebrow="Step 6 of 7" title="Evidence that helps us understand your business" lead="Everything here is optional. Evidence helps clarify a relevant exposure — nothing is claimed to be analysed or verified unless it genuinely has been." />
+
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.Video className="h-4 w-4 text-blue-600" /> Premises walkthrough</p>
+        <p className="mb-3 text-xs text-slate-500">A short video or photos can help clarify the layout, assets and condition of your premises.</p>
+        <UploadField accept=".mp4,.mov,.jpg,.png" multiple kind="media" testid="premises-media-upload"
+          files={data.premisesMedia} onChange={setList("premisesMedia")} />
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.Cog className="h-4 w-4 text-blue-600" /> Machinery and assets</p>
+        <p className="mb-3 text-xs text-slate-500">Photos plus a few details help describe equipment accurately for any future review.</p>
+        <UploadField accept=".jpg,.png" multiple kind="machinery" analyse testid="machinery-photos-upload"
+          files={data.machineryPhotos} onChange={setList("machineryPhotos")} />
+        <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <Input data-testid="asset-name" placeholder="Asset name" value={md.name} onChange={(e) => setMd({ name: e.target.value })} />
+          <Input data-testid="asset-manufacturer" placeholder="Manufacturer" value={md.manufacturer} onChange={(e) => setMd({ manufacturer: e.target.value })} />
+          <Input data-testid="asset-model" placeholder="Model" value={md.model} onChange={(e) => setMd({ model: e.target.value })} />
+          <Input data-testid="asset-serial" placeholder="Serial number" value={md.serial} onChange={(e) => setMd({ serial: e.target.value })} />
+          <Input data-testid="asset-quantity" placeholder="Quantity" value={md.quantity} onChange={(e) => setMd({ quantity: e.target.value })} />
+          <Input data-testid="asset-location" placeholder="Location" value={md.location} onChange={(e) => setMd({ location: e.target.value })} />
+          <Input data-testid="asset-year" placeholder="Year" value={md.year} onChange={(e) => setMd({ year: e.target.value })} />
+          <Input data-testid="asset-replacement" placeholder="Replacement value (₹)" value={md.replacementValue} onChange={(e) => setMd({ replacementValue: e.target.value })} />
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.FileText className="h-4 w-4 text-blue-600" /> Existing policy</p>
+        <p className="mb-3 text-xs text-slate-500">Upload a policy PDF, or go back to Step 5 to enter details manually.</p>
+        <UploadField accept=".pdf" multiple kind="policy" analyse testid="evidence-policy-upload"
+          files={data.evidencePolicyDocs} onChange={setList("evidencePolicyDocs")} />
+      </div>
+
+      <WhyThisMatters testid="step6-why">
+        Evidence is optional at this stage. It can speed up a later review, but your summary is still useful without it. We never claim a file has been analysed, a machine identified or a policy interpreted unless that has actually happened.
+      </WhyThisMatters>
+
+      {totalFiles > 0 && (
+        <RewardCard title="Evidence received" testid="reward-evidence">
+          <ul className="space-y-1.5 text-sm text-slate-600">
+            <li className="flex items-center gap-2"><Icons.Video className="h-4 w-4 text-slate-400" /> Premises media: {data.premisesMedia.length}</li>
+            <li className="flex items-center gap-2"><Icons.Cog className="h-4 w-4 text-slate-400" /> Machinery photos: {data.machineryPhotos.length}</li>
+            <li className="flex items-center gap-2"><Icons.FileText className="h-4 w-4 text-slate-400" /> Policy documents: {data.evidencePolicyDocs.length}</li>
+          </ul>
+          <p className="mt-3 text-xs text-slate-500">Stored for this session. Automated reads are preliminary and marked as demos.</p>
+        </RewardCard>
+      )}
+    </div>
+  );
+}
