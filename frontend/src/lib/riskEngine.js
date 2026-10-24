@@ -136,6 +136,14 @@ function quoteFor(product, d) {
   return { min: Math.round((base * 0.85) / 500) * 500, max: Math.round((base * 1.2) / 500) * 500, drivers };
 }
 
+const p_industry = (p, cat) => p.industries.includes(cat);
+
+const sectorPhrase = (cat) => {
+  const label = categoryLabel(cat);
+  const text = /^[A-Z]{2,}/.test(label) ? label : label.toLowerCase();
+  return `${/^[aeiou]/i.test(text) ? "an" : "a"} ${text}`;
+};
+
 export function recommendProducts(d) {
   const pr = (d.priorities || []).filter((p) => p !== "notsure");
   const covers = d.hasInsurance === "Yes" ? d.insuranceTypes || [] : [];
@@ -154,7 +162,7 @@ export function recommendProducts(d) {
     const partiallyHas = p.coverTypes.some((c) => covers.includes(c));
 
     const reasonLines = [];
-    if (industryMatch) reasonLines.push(`Designed for ${categoryLabel(d.category).toLowerCase()} businesses like yours.`);
+    if (industryMatch) reasonLines.push(`Designed for ${sectorPhrase(d.category).replace(/^an? /, "")} businesses like yours.`);
     matchedPriorities.forEach((mp) => {
       const m = { premises: "protecting your premises", machinery: "covering machinery you depend on", stock: "covering stock and materials", assets: "covering business assets", continuity: "protecting income if operations stop", employees: "meeting employee obligations", thirdparty: "covering third-party liability", vehicles: "covering vehicles and goods in transit" };
       if (m[mp]) reasonLines.push(`Directly addresses ${m[mp]} — which you flagged as hard to lose.`);
@@ -162,7 +170,7 @@ export function recommendProducts(d) {
     if (reasonLines.length === 0) reasonLines.push("A common SME baseline cover worth reviewing.");
 
     return { product: p, relevance, matchedPriorities, alreadyHas, partiallyHas, reasonLines, structureBad };
-  }).filter((x) => x.relevance > 0).sort((a, b) => b.relevance - a.relevance);
+  }).filter((x) => x.relevance > 0 && (!d.category || p_industry(x.product, d.category))).sort((a, b) => b.relevance - a.relevance);
 
   const top = scored.slice(0, 6);
   return top.map((x, i) => {
@@ -179,10 +187,14 @@ export function buildNarrative(d, exposure, recs) {
   const { turnover, employees } = deriveInputs(d);
   const lines = [];
   const ind = INDUSTRY_RISK[d.category];
-  if (d.category) lines.push(`As a ${categoryLabel(d.category).toLowerCase()} business, your profile typically carries ${ind?.label || "general business"} exposure. Our engine weighted this sector accordingly.`);
-  if (d.revenueBand || d.headcount) lines.push(`With an estimated turnover around ${fmtINR(turnover)} and roughly ${employees} people, a disruption here would carry a meaningful financial footprint — which is why continuity and liability score the way they do.`);
+  if (d.category) lines.push(`As ${sectorPhrase(d.category)} business, your profile typically carries ${ind?.label || "general business"} exposure. Our engine weighted this sector accordingly.`);
+  const ranked = [...exposure.areas].sort((a, b) => b.score - a.score);
+  if (d.revenueBand || d.headcount) {
+    const topTwo = ranked.slice(0, 2).map((a) => `${a.label.toLowerCase()} (${a.level})`).join(" and ");
+    lines.push(`With an estimated turnover around ${fmtINR(turnover)} and roughly ${employees} people, your size feeds directly into the scores — your highest-scoring areas are ${topTwo}.`);
+  }
 
-  const hi = [...exposure.areas].sort((a, b) => b.score - a.score)[0];
+  const hi = ranked[0];
   if (hi) lines.push(`Your highest exposure area is ${hi.label.toLowerCase()} (${hi.level}). Key drivers: ${hi.factors.slice(0, 2).map((f) => f.replace(/^[+-]\d+ /, "")).join("; ") || "limited information available"}.`);
 
   if (d.premisesOwnership === "Owned by the business") lines.push("Because the business owns its premises, buildings sit on your balance sheet — property cover becomes more central than for a tenant.");

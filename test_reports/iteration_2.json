@@ -1,0 +1,46 @@
+{
+  "summary": "Tested the frontend only, per the request: the landing page, the 3 CTAs going to /quote, the full 7-step wizard (step tabs, next and back buttons, localStorage persistence across reload), and Step 7 (analysing state, 6 exposure bars, overall band, narrative, Zurich recommendations with premium range, confidence and drivers, considerations, JSON download, edit buttons). Ran 4 scenarios: Manufacturing, Transport+vehicles (with public liability held and a prior claim), IT, and Professional. Everything works and there were zero console or page errors. Outputs change with inputs as expected. The main problem is relevance: every business also gets products meant for other sectors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "riskEngine.buildNarrative", "issue": "Grammar: the IT category reads 'As a it and technology business' because categoryLabel().toLowerCase() makes IT lowercase and the article is always 'a'. Should read 'As an IT and technology business'.", "selector": "[data-testid='ai-analysis']", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Step 7 recommendations (riskEngine.recommendProducts)", "issue": "Products meant for other sectors get recommended. Products are kept if relevance > 0, so a priority match alone (+2 each) is enough even with no industry match. Seen: Manufacturing gets contractors-combined (construction only), office-surgery and property-owners (real estate only). IT gets contractors-combined and shop (retail/hospitality), and 'Potential gap' badges make them look urgent. Transport gets tradespeople.", "affected_selectors": ["[data-testid='recommendation-contractors-combined']", "[data-testid='recommendation-shop']", "[data-testid='recommendation-property-owners']", "[data-testid='recommendation-tradespeople']"]}
+    ],
+    "design_issues": [
+      {"screen": "Step 7 narrative", "issues": ["Line 2 always says '...which is why continuity and liability score the way they do', even when both are only Moderate or Low (e.g. Transport). Make it depend on the actual scores."]}
+    ]
+  },
+  "passed": [
+    "Landing: header shows ComplyStack / Powered by Zurich, hero, 12 product-card-*, and hero/header/cta-quote-btn all present",
+    "All 3 'Get a quote online' buttons go to /quote and show Step 1",
+    "Wizard: business-name-input, category-manufacturing, headcount/revenue pills (revenue--5-25-crore double-dash slug confirmed), priorities, ownership, location-type, fire-protection, has-insurance-yes, insurance-type-*, has-claim-yes all work",
+    "back-btn keeps answers; step-tab-7 jumps; answers and URL survive reload (localStorage)",
+    "Step 7: analysing-phases appears, then results show after ~2s",
+    "exposure-area-property/liability/continuity/people/motor/cyber render with level and factors; overall band shows",
+    "Transport+vehicles: Motor is Elevated (others Low/Moderate); small-fleet and marine-cargo are top 2 and marked Recommended + Potential gap; claim loading and the 'already hold some cover' narrative line appear",
+    "IT gets office-surgery first, Cyber Moderate. Professional gets office-surgery first, Cyber Elevated. Transport Cyber is Low.",
+    "Manufacturing gets commercial-combined first (₹1.8 L–₹2.5 L, Confidence Medium, Turnover driver) and combined-liability in the top 3",
+    "summary-download-btn downloads <name>-protection-summary.json; considerations-list shows; edit-insurance-btn goes to Step 5; edit-business-btn goes to Step 1 with the name kept",
+    "No console errors across the landing page and all journeys"
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "recommendProducts: require an industry match (or a minimum relevance of 3) before recommending a product, so no-industry-match products like contractors-combined, shop and property-owners stop showing for unrelated sectors. Alternatively, never show them as 'Potential gap' without an industry match.",
+    "buildNarrative: fix the 'a it' grammar (choose a/an and keep the 'IT' capitals)",
+    "buildNarrative: make the turnover/headcount line say which areas actually score highest instead of always naming continuity and liability"
+  ],
+  "critical_code_review_comments": [
+    "riskEngine.recommendProducts: the `p.coverTypes.length <= covers.length` check in alreadyHas is redundant",
+    "deriveInputs: revenue 'Not sure' falls back to ₹1.5 Cr and headcount 'Not sure' to 4, but confidence still shows 'High' because revenueBand/headcount are truthy. Treat 'Not sure' as missing in the confidence calculation.",
+    "IT cyber score stops at 54 (Moderate, just below Elevated at 55), while property can reach High for an IT business. Consider weighting cyber higher for it/professional.",
+    "Step7Summary: the useEffect deps array is empty and the analysing state runs on every mount. This is fine but adds a 1.9s delay every time Step 7 is revisited."
+  ],
+  "updated_files": ["/app/test_reports/iteration_2.json"],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "~92% (all flows work; recommendation relevance logic needs refinement)"},
+  "seed_data_creation": "None. Test businesses with the TEST_ prefix were stored only in browser localStorage.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Frontend-only app. Routes: / (Landing) and /quote (Journey). Pill testids are slugified and the ₹ symbol gives a leading double dash, e.g. revenue--1-5-crore, payroll--5-15-lakh. Headcount uses headcount-11-20, headcount-21-50. To retest: check that Manufacturing and IT no longer get contractors-combined, shop or property-owners, and that the IT narrative reads 'an IT'."
+}
