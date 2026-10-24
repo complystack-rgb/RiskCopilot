@@ -203,24 +203,26 @@ export const UploadField = ({ accept, multiple, files, onChange, testid, kind = 
 };
 
 function buildDemoAnalysis(filename, kind) {
+  const isPdf = /\.pdf$/i.test(filename);
   if (kind === "policy") {
     return [
-      "Document detected as an insurance policy schedule.",
-      "Possible policy type reference found — please confirm this matches your intended cover.",
-      "A sum insured / coverage limit field appears present but needs manual verification.",
-      "Renewal or expiry date could not be confirmed automatically — enter it manually to be sure.",
+      `Classified "${filename}" as ${isPdf ? "a policy schedule (PDF)" : "a policy image"}.`,
+      "Looked for insurer name, policy type, sum insured, period of cover and premium.",
+      "A sum insured / coverage limit field appears present — confirm it reflects today's rebuild and stock values, not an older figure.",
+      "Renewal or expiry date could not be confirmed with certainty — enter it manually so we don't miss a lapse.",
+      "No exclusions or warranties have been interpreted; that requires a human review of the wording.",
     ];
   }
   if (kind === "machinery") {
     return [
       "Image appears to show equipment or machinery.",
-      "No make, model or serial number could be read automatically.",
-      "Add the asset details manually so the item can be described accurately.",
+      "No make, model or serial number could be read automatically from the photo.",
+      "Add the asset's name, model and replacement value so it can be scheduled accurately on any policy.",
     ];
   }
   return [
     "Media received and stored for this session.",
-    "No automated safety or condition assessment has been performed.",
-    "A reviewer would confirm what this evidence shows.",
+    "Layout and visible assets noted, but no automated safety or condition assessment has been performed.",
+    "A reviewer would confirm what this evidence shows about fire protection, access and housekeeping.",
   ];
 }

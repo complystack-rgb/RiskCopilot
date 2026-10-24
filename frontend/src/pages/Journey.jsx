@@ -26,10 +26,10 @@ export default function Journey() {
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white"><Icons.ShieldCheck className="h-5 w-5" /></div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A1F44] text-white"><Icons.ShieldCheck className="h-5 w-5" /></div>
             <div>
-              <p className="text-base font-extrabold tracking-tight text-slate-900">ComplyStack</p>
-              <p className="-mt-0.5 text-[11px] text-slate-400">SME protection discovery</p>
+              <p className="text-base font-extrabold tracking-tight text-[#0A1F44]">ComplyStack</p>
+              <p className="-mt-0.5 text-[11px] font-medium text-blue-700">Powered by Zurich</p>
             </div>
           </div>
           <button onClick={reset} data-testid="restart-btn" className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-700">
