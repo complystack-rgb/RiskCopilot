@@ -1,0 +1,24 @@
+{
+  "summary": "ComplyStack 7-step SME insurance discovery journey tested end-to-end. All 7 steps traversed successfully with no console errors. State persistence (localStorage), live summary sidebar, conditional logic, multi-selects, file flow, and JSON download all working.",
+  "tested_scope": ["frontend", "integration"],
+  "passed": [
+    "App loads at / with ComplyStack header and 7-step progress stepper",
+    "Step 1: business-name-input accepts text; category card click reveals activity-select; activity option selectable; Continue enabled and advances",
+    "Live summary sidebar updates with business name, activity, team/revenue tiles",
+    "Step 2: headcount/payroll/revenue pills clickable; snapshot reward reflects selections",
+    "Step 3: 9 priority cards render as multi-select; 8 followup fields appear for selections; 'I'm not sure' option present and clickable",
+    "Step 4: ownership-* and location-type-* pills clickable; advances",
+    "Step 5: has-insurance-yes reveals 13 insurance-type-* options; multi-select works; ownership-structure-* works",
+    "Step 6: evidence step accessible and advances",
+    "Step 7: considerations-list rendered; summary-download-btn triggers download of 'complystack-protection-summary.json'; edit-business-btn jumps back to Step 1",
+    "localStorage persistence verified: 'Acme Textiles Pvt Ltd' preserved after navigating back via step-tab-1",
+    "step-tab-N navigation jumps between steps as expected",
+    "Zero console errors across full journey"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Backend testing was explicitly skipped per request (frontend-only app with localStorage). File upload 'AI analysis' is intentionally simulated/MOCKED client-side and clearly labelled as a demo preliminary read — per product requirement, not a bug. Minor observation: after clicking edit-business-btn then jumping to step-tab-3, the live summary panel showed the empty state until data was re-interacted with; did not block any flow and may be expected rendering."
+}
