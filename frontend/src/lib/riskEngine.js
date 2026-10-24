@@ -195,7 +195,7 @@ export function buildNarrative(d, exposure, recs) {
   }
 
   const hi = ranked[0];
-  if (hi) lines.push(`Your highest exposure area is ${hi.label.toLowerCase()} (${hi.level}). Key drivers: ${hi.factors.slice(0, 2).map((f) => f.replace(/^[+-]\d+ /, "")).join("; ") || "limited information available"}.`);
+  if (hi) lines.push(`What drives your ${hi.label.toLowerCase()} score most: ${hi.factors.slice(0, 2).map((f) => f.replace(/^[+-]\d+ /, "")).join("; ") || "limited information available"}.`);
 
   if (d.premisesOwnership === "Owned by the business") lines.push("Because the business owns its premises, buildings sit on your balance sheet — property cover becomes more central than for a tenant.");
   else if (d.premisesOwnership === "Rented or leased") lines.push("As a tenant, the building itself may be the landlord's responsibility, but your fit-out, stock and contents usually are not — a common blind spot.");

@@ -1,0 +1,35 @@
+{
+  "summary": "Frontend-only retest of the iteration_2 fixes plus a light regression. Journeys were set up by writing data to localStorage (complystack_journey_v1), then opening /quote and clicking step-tab-7. Ran Manufacturing, IT and Transport with all 8 priorities selected (the worst case for products leaking in from other sectors), and Transport again with 3 smaller priority sets. All fixed items pass and there were zero console or page errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Step 7 narrative", "issues": ["Lines 2 and 3 repeat each other: line 2 now names the two highest-scoring areas, and line 3 then says 'Your highest exposure area is X' for the same area. Consider merging them or changing line 3 to talk about the drivers only."]}
+    ]
+  },
+  "passed": [
+    "Landing: 3 quote CTAs found; clicking one goes to /quote",
+    "Manufacturing (all priorities) gets commercial-combined, combined-liability, marine-cargo, excess-of-loss, executive-risk and small-fleet. No contractors-combined, office-surgery, property-owners or shop.",
+    "IT (all priorities) gets office-surgery (first), combined-liability, executive-risk and personal-accident. No contractors-combined or shop.",
+    "Transport (all priorities) shows no tradespeople. With priorities [vehicles], small-fleet and marine-cargo are the top 2. With [vehicles, stock], marine-cargo and small-fleet are the top 2. With [vehicles, thirdparty], combined-liability comes first and small-fleet and marine-cargo follow. That is expected: combined-liability gets the baseline bonus plus the thirdparty priority match.",
+    "Narrative: IT reads 'As an IT and technology business'. Manufacturing and Transport read 'As a manufacturing / transport and logistics business'.",
+    "Narrative size line names the actual top two areas with their levels, e.g. 'liability (High) and property & assets (High)' and 'motor & transit (Elevated) and business continuity (Moderate)'",
+    "No console or page errors on any journey"
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "Optional: remove the overlap between narrative line 2 (top-two areas) and line 3 (highest exposure area)"
+  ],
+  "critical_code_review_comments": [
+    "recommendProducts: the filter now also requires p_industry when category is set, so the 'relevance > 0' guard mostly matters for products that fail on structure. Logic is correct.",
+    "Still open from iteration_2: IT cyber exposure stays Moderate while property is High when premises are owned and assets are prioritised. Consider a higher cyber weight for the it/professional sectors.",
+    "Still open from iteration_2: confidence ignores 'Not sure' revenue/headcount answers"
+  ],
+  "updated_files": ["/app/test_reports/iteration_3.json"],
+  "success_rate": {"backend": "N/A (frontend only)", "frontend": "100% of retest items"},
+  "seed_data_creation": "None. TEST_ businesses were stored only in browser localStorage.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Fastest way to reach Step 7: page.evaluate localStorage.setItem('complystack_journey_v1', JSON.stringify(data)) using field names from JourneyContext DEFAULT_DATA (category ids: manufacturing, it, transport...; headcount '11–20' uses an en dash; revenueBand '₹1–5 crore'), then go to /quote and click [data-testid='step-tab-7']. Recommendation cards are [data-testid^='recommendation-<productId>'] and the narrative is [data-testid='ai-analysis']."
+}

@@ -40,6 +40,11 @@ collect information. India-specific fields and INR bands.
   prioritised next action, edit buttons, JSON download, print/PDF.
 - Shared: progress stepper + step tabs, live summary sidebar, Why-this-matters accordions.
 
+## Iteration 2–3 (2026-06)
+- Zurich branding, landing page, client-side risk engine, Zurich product quotes in Step 7.
+- Fixes: products shown only if made for the business's sector; narrative grammar ("an IT");
+  size line names the actual top-2 exposure areas; no repeated top-area line. Verified (iteration_3).
+
 ## Backlog / remaining (prioritised)
 - P1: Connect MongoDB backend to persist journeys server-side (user said "connect DB later").
 - P1: Real policy PDF analysis via an LLM integration (replace simulated read).
