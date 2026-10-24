@@ -11,7 +11,10 @@ export default function Landing() {
       <header className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 px-3 sm:px-4 sm:px-6 lg:px-8 py-4">
           <BrandBar />
-          <Button data-testid="header-quote-btn" onClick={go} className="shrink-0 px-3 sm:px-4"><span className="sm:hidden">Get a quote</span><span className="hidden sm:inline">Get a quote online</span> <Icons.ArrowRight className="ml-1.5 hidden sm:inline h-4 w-4" /></Button>
+          <div className="flex items-center gap-2">
+            <a href="/console" data-testid="partner-console-link" className="hidden sm:inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"><Icons.LayoutDashboard className="h-4 w-4" /> Partner console</a>
+            <Button data-testid="header-quote-btn" onClick={go} className="shrink-0 px-3 sm:px-4"><span className="sm:hidden">Get a quote</span><span className="hidden sm:inline">Get a quote online</span> <Icons.ArrowRight className="ml-1.5 hidden sm:inline h-4 w-4" /></Button>
+          </div>
         </div>
       </header>
 

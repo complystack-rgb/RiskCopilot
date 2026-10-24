@@ -1,177 +1,86 @@
 {
-  "app_name": "ComplyStack — SME Insurance Discovery Journey",
-  "archetype": "Approachable & Premium SaaS (Swiss High-Contrast)",
-  "design_philosophy": {
-    "core_principle": "Consultative, transparent, friction-free discovery journey for SME business owners. Focus on clarity, education ('Why this matters'), dynamic branching, and real-time visual rewards without score gamification.",
-    "theme_mode": "Light mode primary with high contrast typography and crisp warm greys.",
-    "color_palette": {
-      "bg_main": "#F8FAFC",
-      "bg_card": "#FFFFFF",
-      "bg_sidebar": "#F1F5F9",
-      "bg_muted": "#F8FAFC",
-      "text_primary": "#0F172A",
-      "text_secondary": "#475569",
-      "text_muted": "#64748B",
-      "brand_primary": "#2563EB",
-      "brand_primary_hover": "#1D4ED8",
-      "brand_primary_light": "#EFF6FF",
-      "amber_attention": "#D97706",
-      "amber_bg": "#FEF3C7",
-      "amber_border": "#FCD34D",
-      "emerald_known": "#059669",
-      "emerald_bg": "#D1FAE5",
-      "indigo_limitation": "#4F46E5",
-      "indigo_bg": "#EEF2FF",
-      "rose_gap": "#DC2626",
-      "rose_bg": "#FEE2E2",
-      "border_default": "#E2E8F0",
-      "border_focus": "#3B82F6"
+  "project": "ComplyStack Console - Zurich Insurance (India) Back-Office Ops",
+  "archetype": "Swiss High-Contrast Fintech & Underwriting Precision",
+  "branding": {
+    "primary_logo": "/brand/zurich-logo.png",
+    "secondary_logo": "/brand/complystack-logo.png",
+    "co_branding_header": "Zurich Insurance (India) | Powered by ComplyStack"
+  },
+  "color_palette": {
+    "zurich_navy": "#0A1F44",
+    "zurich_blue": "#2563EB",
+    "zurich_light_bg": "#F8FAFC",
+    "surface_white": "#FFFFFF",
+    "surface_slate_50": "#F1F5F9",
+    "slate_border": "#E2E8F0",
+    "text_primary": "#0F172A",
+    "text_muted": "#64748B",
+    "risk_bands": {
+      "low": {"bg": "#ECFDF5", "text": "#047857", "border": "#A7F3D0", "label": "Low Risk"},
+      "medium": {"bg": "#FFFBEB", "text": "#B45309", "border": "#FDE68A", "label": "Moderate Risk"},
+      "high": {"bg": "#FEF2F2", "text": "#B91C1C", "border": "#FECACA", "label": "High Risk"},
+      "critical": {"bg": "#450A0A", "text": "#FCA5A5", "border": "#991B1B", "label": "Critical Exposure"}
+    },
+    "status_badges": {
+      "submitted": {"bg": "#EFF6FF", "text": "#1D4ED8", "border": "#BFDBFE"},
+      "assigned": {"bg": "#F0FDF4", "text": "#15803D", "border": "#BBF7D0"},
+      "inspection_pending": {"bg": "#FFF7ED", "text": "#C2410C", "border": "#FFEDD5"},
+      "under_review": {"bg": "#F5F3FF", "text": "#6D28D9", "border": "#DDD6FE"},
+      "approved": {"bg": "#ECFDF5", "text": "#047857", "border": "#A7F3D0"},
+      "flagged": {"bg": "#FEF2F2", "text": "#DC2626", "border": "#FCA5A5"}
     }
   },
   "typography": {
-    "font_family_heading": "Plus Jakarta Sans, Outfit, sans-serif",
-    "font_family_body": "Inter, DM Sans, sans-serif",
-    "hierarchy": {
-      "h1_hero": "text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900",
-      "h2_section": "text-2xl sm:text-3xl font-bold tracking-tight text-slate-900",
-      "h3_card": "text-lg sm:text-xl font-semibold text-slate-900",
-      "body_lead": "text-base sm:text-lg text-slate-600 leading-relaxed",
-      "body_regular": "text-sm sm:text-base text-slate-600 leading-normal",
-      "caption": "text-xs font-medium uppercase tracking-wider text-slate-500"
+    "heading_font": "Space Grotesk, Plus Jakarta Sans, sans-serif",
+    "body_font": "Inter, system-ui, sans-serif",
+    "code_font": "JetBrains Mono, Fira Code, monospace",
+    "scale": {
+      "h1": "text-2xl font-bold tracking-tight text-slate-900",
+      "h2": "text-xl font-semibold tracking-tight text-slate-900",
+      "h3": "text-lg font-medium text-slate-900",
+      "body": "text-sm text-slate-700 leading-normal",
+      "small": "text-xs text-slate-500 font-medium",
+      "mono_data": "font-mono text-xs text-slate-800"
     }
   },
-  "layout_and_spacing": {
-    "wizard_container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10",
-    "grid_structure": "grid grid-cols-1 lg:grid-cols-12 gap-8 items-start",
-    "main_form_span": "lg:col-span-8 space-y-8",
-    "sidebar_span": "lg:col-span-4 sticky top-6 space-y-6",
-    "padding_card": "p-6 sm:p-8",
-    "gap_forms": "space-y-6"
+  "layout_architecture": {
+    "header_bar": "Fixed top bar h-16 bg-[#0A1F44] text-white flex items-center justify-between px-6 z-50 shadow-md",
+    "persona_switcher": "Pill switcher with explicit active states (Underwriter / Distributor Admin / Field Agent) with high-contrast text and subtle ring glow",
+    "navigation_tabs": "Secondary sticky nav bar bg-white border-b border-slate-200 px-6 py-2 flex gap-4 text-sm font-medium",
+    "main_container": "max-w-[1600px] mx-auto p-6 space-y-6 bg-[#F8FAFC] min-h-[calc(100vh-4rem)]",
+    "card_style": "bg-white rounded-lg border border-slate-200 shadow-sm p-5 transition-all hover:border-slate-300",
+    "dense_table": "w-full text-left text-xs border-collapse divide-y divide-slate-200 bg-white shadow-sm rounded-lg overflow-hidden"
   },
-  "step_by_step_wizard_architecture": [
-    {
-      "step_number": 1,
-      "title": "Tell us about your business",
-      "description": "Establish your core business identity and industry classification.",
-      "fields": [
-        "Business Name (Text)",
-        "Category Cards Selection (Technology & Software, Retail & E-commerce, Professional Services, Healthcare & Wellness, Manufacturing & Goods, Food & Hospitality)",
-        "Specific Activity (Text description)",
-        "Start Year (Year picker/number)",
-        "Location Details (Country, State, City, PIN, Address)"
-      ],
-      "reward_card": "Business Identity Card (Displays verified badge, entity name, foundation year & location pin)"
+  "key_modules": {
+    "insurer_overview": {
+      "kpi_grid": "4-column metric grid showing Total Pipeline, Avg Risk Score, SLA Breaches, Premium Volume",
+      "funnel_and_tables": "Recharts visual conversion funnel alongside distributor league table"
     },
-    {
-      "step_number": 2,
-      "title": "Business size & financial scale",
-      "description": "Help us understand your operational scale to gauge risk exposure.",
-      "fields": [
-        "Headcount Band (1-5, 6-20, 21-50, 51-200, 201+)",
-        "Annual Payroll Band ($0-$250k, $250k-$1M, $1M-$5M, $5M+)",
-        "Annual Revenue Band ($0-$500k, $500k-$2M, $2M-$10M, $10M+)"
-      ],
-      "reward_card": "Live Business Snapshot (Displays headcount scale index, payroll ratio, revenue segment)"
+    "case_queue": {
+      "filters": "Search by SME/Lead ID, Risk Band, Distributor, SLA status, Industry filters",
+      "actions": "Quick view, reassign agent, open pre-inspection report"
     },
-    {
-      "step_number": 3,
-      "title": "What would be hardest to lose?",
-      "description": "Identify priority assets and operations critical to business survival.",
-      "fields": [
-        "Priority Cards (Multi-select: Key Machinery & Hardware, Customer Data & IP, Revenue Flow & Interruption, Key Personnel / Executives, Physical Premises)",
-        "Conditional Follow-ups (e.g. data backup frequency for IP, replacement lead times for equipment)"
-      ],
-      "reward_card": "Protection Priorities Summary (Highlights top risk vulnerabilities and business resilience priorities)"
+    "pre_inspection_report": {
+      "risk_gauge": "Custom circular/radial gauge showing 0-100 composite risk with 6 sub-scores",
+      "annotated_evidence_gallery": "Image canvas with bounding-box hotspots over machine serial plates + OCR extracted fields",
+      "video_walkthrough_timeline": "Timestamped video keyframe scrubber with identified hazards",
+      "machinery_register": "Table detailing equipment, age, maintenance record, replacement cost",
+      "coverage_gap_analysis": "Side-by-side table comparing prior coverage vs recommended Zurich product suite",
+      "underwriter_actions": "Agent justification form, Insurer approval/request-revision workflow, mis-selling flagging"
     },
-    {
-      "step_number": 4,
-      "title": "Premises and operations",
-      "description": "Map physical footprint, inventory valuation, and customer interaction dynamics.",
-      "fields": [
-        "Premises Ownership (Rented, Owned, Remote / WFH, Hybrid)",
-        "Number of Operational Locations",
-        "Public & Customer Onsite Visits (Yes / No / Frequent)",
-        "Inventory Value Slider / Select",
-        "Hazard Elements Checklist (Flammables, Heavy Machinery, Public Access, Hazardous Chemicals)"
-      ],
-      "reward_card": "Premises & Operations Summary (Displays location footprint, inventory bracket, hazard index)"
-    },
-    {
-      "step_number": 5,
-      "title": "Existing insurance coverage",
-      "description": "Review current protection policies and identify immediate coverage gaps.",
-      "fields": [
-        "Current Cover Types (Multi-select: General Liability, Cyber & Data Breach, Commercial Property, Workers Compensation, Directors & Officers, Professional Indemnity)",
-        "Policy PDF Upload OR Manual Entry toggle",
-        "Claims History (Past 3 years: 0 claims, 1-2 minor claims, major claim)",
-        "Ownership Structure (Sole Proprietor, Partnership, LLC / Corp, VC-backed)"
-      ],
-      "reward_card": "Existing Protection Summary (Visual matrix of active vs missing policy shields)"
-    },
-    {
-      "step_number": 6,
-      "title": "Evidence & documentation (Optional)",
-      "description": "Attach optional media and documents to accelerate underwriting and policy verification.",
-      "fields": [
-        "Premises Walkthrough (Video/Photos Upload dropzone)",
-        "Machinery & Asset Photos (Photo Upload dropzone)",
-        "Policy PDF Upload (File dropzone with status: Uploaded / Pending / Skipped)"
-      ],
-      "reward_card": "Evidence & Verification Vault (Displays uploaded asset inventory list & verification statuses)"
-    },
-    {
-      "step_number": 7,
-      "title": "Business protection summary",
-      "description": "Comprehensive diagnostic overview, itemized status audit, and next action recommendations.",
-      "fields": [
-        "Business at a Glance summary card",
-        "What May Need a Closer Look (Categorized items with 4 distinct status badges: Known [Green], Needs Verification [Amber], Potential Limitation [Indigo], Potential Gap [Amber/Red])",
-        "What to do Next actionable roadmap steps",
-        "Inline edit buttons for any step section",
-        "Downloadable Summary (PDF / JSON download trigger)",
-        "Shareable summary link generator modal"
-      ],
-      "reward_card": "Complete ComplyStack Protection Passport"
+    "cyber_website_check": {
+      "domain_input": "URL scanner supporting Southeast Asian SMEs (Malaysia/Indonesia)",
+      "findings": "Security header checks, SSL/TLS grade, SPF/DMARC records with raw proof excerpts"
     }
-  ],
-  "ux_feature_requirements": {
-    "progress_navigation": "Top fixed stepper with step progress percentage bar, clickable step numbers for completed steps, Back and Next buttons with keyboard support.",
-    "live_summary_sidebar": "Sticky responsive side panel showing real-time business identity & unlocked reward cards as the user completes steps. Supports collapse/expand toggle on mobile.",
-    "explainers": "Every complex question has a 'Why this matters' expandable accordion banner with light blue accent background (#EFF6FF) and icon.",
-    "uncertainty_toggles": "Provide 'Not sure', 'Estimate only', or 'I'll do this later' radio/checkbox options for financial, inventory, and policy fields to prevent drop-off.",
-    "no_gamified_scores": "Strictly NO points, badges like 'Level 5 Risk', or arbitrary 0-100 credit scores. Use professional status indicators: Known, Needs verification, Potential limitation, Potential gap.",
-    "downloadable_summary": "Generate formatted client-side summary printable layout with option to download as JSON/PDF preview."
   },
-  "image_urls": [
-    {
-      "category": "sme_team",
-      "url": "https://images.unsplash.com/photo-1559136555-9303baea8ebd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBzbWFsbCUyMGJ1c2luZXNzJTIwb2ZmaWNlJTIwb3duZXIlMjB0ZWFtJTIwd29ya3xlbnwwfHx8fDE3OTI4MzkyNDR8MA&ixlib=rb-4.1.0&q=85",
-      "alt": "Modern SME Team Working in Office"
-    },
-    {
-      "category": "small_business_workspace",
-      "url": "https://images.pexels.com/photos/7180815/pexels-photo-7180815.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "alt": "Small Business Operations Workspace"
-    },
-    {
-      "category": "business_owners",
-      "url": "https://images.pexels.com/photos/7857585/pexels-photo-7857585.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "alt": "Business Owners Collaborating"
-    }
-  ],
-  "testing_and_accessibility": {
-    "data_testid_convention": "kebab-case role-based test identifiers (e.g. data-testid='step-1-next-button', data-testid='business-name-input', data-testid='summary-download-pdf-button', data-testid='live-summary-sidebar')",
-    "contrast_standards": "WCAG AA compliant (minimum 4.5:1 text contrast). Explicit dark slate text over light slate backgrounds.",
-    "keyboard_navigation": "Full tab ordering, explicit focus ring styles (ring-2 ring-blue-500 ring-offset-2)."
+  "image_urls": {
+    "textile_factory_1": "https://images.unsplash.com/photo-1610891015188-5369212db097?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwxfHx0ZXh0aWxlJTIwZmFjdG9yeSUyMG1hY2hpbmVyeSUyMGluc3BlY3Rpb258ZW58MHx8fHwxNzkyODQyMDExfDA&ixlib=rb-4.1.0&q=85",
+    "textile_factory_2": "https://images.unsplash.com/photo-1524292332709-b33366a7f165?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwzfHx0ZXh0aWxlJTIwZmFjdG9yeSUyMG1hY2hpbmVyeSUyMGluc3BlY3Rpb258ZW58MHx8fHwxNzkyODQyMDExfDA&ixlib=rb-4.1.0&q=85",
+    "machinery_workers": "https://images.pexels.com/photos/3544567/pexels-photo-3544567.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
   },
-  "instructions_to_main_agent": [
-    "Build the complete 7-step wizard journey inside React using standard component modularization (e.g. components/wizard/Step1Identity.jsx, Step2Size.jsx, Step3Priorities.jsx, Step4Premises.jsx, Step5Insurance.jsx, Step6Evidence.jsx, Step7Summary.jsx).",
-    "Implement the live business summary sidebar component that reacts instantly to state changes across all steps.",
-    "Include 'Why this matters' expandable tooltips/banners for every major section.",
-    "Provide 'Not sure / Estimate only' switches for numerical inputs.",
-    "Use Lucide-React icons for step icons, status badges, and asset visualizers.",
-    "Ensure every interactive button, input, tab, card select, and status indicator includes explicit data-testid attributes.",
-    "Strictly avoid any dark-gradient slop; keep backgrounds clean white (#FFFFFF) and light grey (#F8FAFC) with vibrant restrained blue (#2563EB) actions and warm amber (#D97706) highlights."
-  ],
-  "UNIVERSAL GUIDELINES FOR MAIN AGENT": "Follow generous spacing (p-6, p-8), light theme priority, clear hierarchy, no centered body text, explicit hover/focus state text contrast, and no generic text-8xl/9xl headings."
+  "universal_guidelines": {
+    "data_testid_rule": "ALL interactive components, persona buttons, tables, filters, forms, and report actions MUST have kebab-case data-testid attributes (e.g. data-testid='persona-switcher-underwriter', data-testid='case-filter-status').",
+    "no_transparent_overlays": "Dropdowns, dialogs, and sticky headers MUST use solid or high-opacity backdrop blurs to avoid text overlap bleed.",
+    "js_component_format": "Use React standard JSX components (.jsx / .js files). All Shadcn components in src/components/ui should be customized with Tailwind classes."
+  }
 }

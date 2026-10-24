@@ -6,6 +6,7 @@ import { runEngine, fmtINR } from "@/lib/riskEngine";
 import { Button } from "@/components/ui/button";
 import * as Icons from "lucide-react";
 import { toast } from "sonner";
+import { BrokerReviewDialog } from "./BrokerReviewDialog";
 
 const AreaBar = ({ a }) => {
   const color = a.score >= 75 ? "bg-rose-500" : a.score >= 55 ? "bg-amber-500" : a.score >= 30 ? "bg-blue-500" : "bg-emerald-500";
@@ -37,6 +38,7 @@ export default function Step7Summary() {
   const { data, setStep } = useJourney();
   const [analysing, setAnalysing] = useState(true);
   const [phase, setPhase] = useState(0);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const phases = ["Reading your answers", "Scoring exposure across 6 areas", "Matching Zurich SME products", "Estimating indicative premiums"];
 
   useEffect(() => {
@@ -219,8 +221,9 @@ export default function Step7Summary() {
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="outline" data-testid="edit-business-btn" onClick={() => setStep(1)}><Icons.Pencil className="mr-1.5 h-4 w-4" /> Edit business info</Button>
           <Button variant="outline" data-testid="edit-insurance-btn" onClick={() => setStep(5)}><Icons.FileText className="mr-1.5 h-4 w-4" /> Review insurance</Button>
-          <Button data-testid="broker-review-btn" onClick={() => toast.success("Broker review requested — a Zurich underwriter would follow up (demo).")}><Icons.UserCheck className="mr-1.5 h-4 w-4" /> Request a broker review</Button>
+          <Button data-testid="broker-review-btn" onClick={() => setReviewOpen(true)}><Icons.UserCheck className="mr-1.5 h-4 w-4" /> Request a broker review</Button>
         </div>
+        <BrokerReviewDialog open={reviewOpen} onOpenChange={setReviewOpen} data={data} engine={engine} />
       </section>
 
       <p className="text-xs text-slate-400">This summary provides value even if some questions were skipped. Premiums are indicative estimates from a rule engine and do not confirm or deny any insurance coverage.</p>
