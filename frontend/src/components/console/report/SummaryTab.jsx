@@ -1,5 +1,7 @@
-import { useState } from "react";
 import * as Icons from "lucide-react";
+import { toast } from "sonner";
+import { api, errMsg } from "@/lib/api";
+import { useConsole } from "@/context/ConsoleContext";
 import { Panel, BandBadge, ScoreRing } from "@/components/console/ui";
 import { inr } from "@/lib/consoleUi";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,10 +32,13 @@ const Sums = ({ r }) => (
   </dl>
 );
 
-const Checklist = ({ items, caseId }) => {
-  const key = `cs_check_${caseId}`;
-  const [done, setDone] = useState(() => JSON.parse(localStorage.getItem(key) || "[]"));
-  const toggle = (i) => { const n = done.includes(i) ? done.filter((x) => x !== i) : [...done, i]; setDone(n); localStorage.setItem(key, JSON.stringify(n)); };
+const Checklist = ({ items, c, onUpdate }) => {
+  const { persona } = useConsole();
+  const done = c.checklist_done || [];
+  const toggle = async (i) => {
+    const n = done.includes(i) ? done.filter((x) => x !== i) : [...done, i];
+    try { const { data } = await api.post(`/cases/${c.id}/checklist`, { done: n, actor: persona.name }); onUpdate(data); } catch (e) { toast.error(errMsg(e)); }
+  };
   return (
     <ul className="space-y-2" data-testid="inspection-checklist">
       {items.map((t, i) => (
@@ -44,7 +49,7 @@ const Checklist = ({ items, caseId }) => {
   );
 };
 
-export const SummaryTab = ({ c, onEvidence }) => {
+export const SummaryTab = ({ c, onEvidence, onUpdate }) => {
   const r = c.report;
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -64,7 +69,7 @@ export const SummaryTab = ({ c, onEvidence }) => {
         <Panel title="Risk score" icon={Icons.Gauge}>
           <div className="flex items-center gap-5"><ScoreRing score={r.fire_score} band={r.fire_band} /><div><BandBadge band={r.fire_band}>{r.fire_band} fire risk</BandBadge><p className="mt-2 text-xs leading-relaxed text-slate-500">Weighted from {r.indicators.length} indicators, {r.machinery.length} machine types and the location. {r.location.eq_zone && "Seismic zone. "}{r.location.flood_zone && "Flood-prone state."}</p></div></div>
         </Panel>
-        <Panel title="Inspection prep checklist" icon={Icons.ClipboardCheck}><Checklist items={r.inspection_checklist} caseId={c.id} /></Panel>
+        <Panel title="Inspection prep checklist" icon={Icons.ClipboardCheck}><Checklist items={r.inspection_checklist} c={c} onUpdate={onUpdate} /></Panel>
         <Panel title="Ask the SME for" icon={Icons.FileQuestion}><ul className="space-y-1.5 text-sm text-slate-700" data-testid="data-requests">{r.data_requests.map((d) => <li key={d} className="flex gap-2"><Icons.Dot className="h-5 w-5 shrink-0 text-amber-500" />{d}</li>)}</ul></Panel>
         <p className="text-[11px] leading-relaxed text-slate-400">{r.disclaimer}</p>
       </div>

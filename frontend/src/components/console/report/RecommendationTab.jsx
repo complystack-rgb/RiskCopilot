@@ -77,8 +77,8 @@ const Review = ({ c, onDone }) => {
 export const RecommendationTab = ({ c, onUpdate }) => {
   const { persona, meta } = useConsole();
   const rec = c.agent_recommendation;
-  const canRecommend = persona.role !== "insurer" && !["approved", "declined"].includes(c.status);
-  const canReview = persona.role === "insurer" && rec && ["recommendation_submitted", "justification_requested"].includes(c.status);
+  const canRecommend = persona.role !== "insurer" && ["inspected", "recommendation_submitted", "justification_requested"].includes(c.status);
+  const canReview = persona.role === "insurer" && rec && c.status === "recommendation_submitted";
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Panel title="Engine recommendation · evidence-based" icon={Icons.Cpu}><EngineList recs={c.report.engine_recommendations} /></Panel>
@@ -93,7 +93,7 @@ export const RecommendationTab = ({ c, onUpdate }) => {
         {c.review && <div data-testid="review-outcome" className={`rounded-lg border p-4 text-sm ${c.review.decision === "approve" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-rose-200 bg-rose-50 text-rose-800"}`}><p className="font-semibold">{c.review.by} · {c.review.decision.replace("_", " ")}</p>{c.review.comment && <p className="mt-1">{c.review.comment}</p>}</div>}
         {canReview && <Panel title="Insurer decision" icon={Icons.Gavel}><Review c={c} onDone={onUpdate} /></Panel>}
         {canRecommend && <Panel title={rec ? "Revise recommendation" : "Submit your recommendation"} icon={Icons.PenLine}><AgentForm c={c} onDone={onUpdate} /></Panel>}
-        {!rec && !canRecommend && <Panel><p className="text-sm text-slate-500">Waiting for the assigned agent to inspect the site and submit a recommendation.</p></Panel>}
+        {!rec && !canRecommend && <Panel><p className="text-sm text-slate-500" data-testid="recommendation-waiting">{persona.role === "insurer" ? "Waiting for the assigned agent to inspect the site and submit a recommendation." : "Complete the site inspection (Schedule inspection → Mark inspected) to unlock your recommendation."}</p></Panel>}
       </div>
     </div>
   );

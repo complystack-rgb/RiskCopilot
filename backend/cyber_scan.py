@@ -1,6 +1,8 @@
 """Live, passive cyber check of a public website. Every finding cites its source."""
 import ssl
 import socket
+import asyncio
+import ipaddress
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 import httpx
@@ -30,10 +32,24 @@ def _cert(host):
             return {"issuer": dict(x[0] for x in c["issuer"]).get("organizationName", "?"), "expires": c["notAfter"], "tls": s.version()}
 
 
+def _guard(host):
+    try:
+        infos = socket.getaddrinfo(host, 443)
+    except socket.gaierror:
+        raise ValueError(f"Domain {host} does not resolve")
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+            raise ValueError("Only public websites can be checked")
+
+
 async def scan(url):
     if not url.startswith("http"):
         url = "https://" + url
     host = urlparse(url).hostname
+    if not host or "." not in host:
+        raise ValueError("Enter a valid website address, e.g. www.company.com.my")
+    await asyncio.to_thread(_guard, host)
     domain = host[4:] if host.startswith("www.") else host
     findings = []
 
@@ -57,7 +73,7 @@ async def scan(url):
             add("http_redirect", "HTTP redirects to HTTPS", "warn", "Moderate", "Port 80 did not respond", f"http://{host}", "Confirm that HTTP is disabled or redirects")
 
     try:
-        cert = _cert(host)
+        cert = await asyncio.to_thread(_cert, host)
         exp = datetime.strptime(cert["expires"], "%b %d %H:%M:%S %Y %Z").replace(tzinfo=timezone.utc)
         days = (exp - datetime.now(timezone.utc)).days
         add("tls", "Valid TLS certificate", "pass" if days > 21 else "warn", "High",
@@ -79,9 +95,10 @@ async def scan(url):
     if cookies:
         add("cookies", "Cookies are Secure and HttpOnly", "warn" if weak else "pass", "Moderate", f"Cookies missing a flag: {', '.join(weak)}" if weak else f"{len(cookies)} cookie(s) set with both flags", final, "Set the Secure, HttpOnly and SameSite flags on session cookies")
 
-    spf = [t for t in _txt(domain) if t.lower().startswith("v=spf1")]
+    root_txt, dmarc_txt = await asyncio.gather(asyncio.to_thread(_txt, domain), asyncio.to_thread(_txt, f"_dmarc.{domain}"))
+    spf = [t for t in root_txt if t.lower().startswith("v=spf1")]
     add("spf", "SPF record published", "pass" if spf else "fail", "Elevated", spf[0][:160] if spf else f"No v=spf1 TXT record on {domain}", f"DNS TXT {domain}", "Publish an SPF record to stop others sending email as this domain")
-    dmarc = [t for t in _txt(f"_dmarc.{domain}") if t.lower().startswith("v=dmarc1")]
+    dmarc = [t for t in dmarc_txt if t.lower().startswith("v=dmarc1")]
     pol = (dmarc[0].split("p=")[1].split(";")[0].strip() if dmarc and "p=" in dmarc[0] else None)
     add("dmarc", "DMARC policy enforced", "pass" if pol in ("reject", "quarantine") else "warn" if dmarc else "fail", "Elevated",
         dmarc[0][:160] if dmarc else f"No DMARC record at _dmarc.{domain}", f"DNS TXT _dmarc.{domain}", "Publish DMARC with p=quarantine or p=reject")

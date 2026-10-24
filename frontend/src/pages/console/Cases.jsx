@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
-import { api } from "@/lib/api";
+import { api, errMsg } from "@/lib/api";
+import { toast } from "sonner";
 import { useConsole } from "@/context/ConsoleContext";
 import { inr, STATUS_META, slaInfo, ago } from "@/lib/consoleUi";
 import { PageHead, StatusBadge, BandBadge } from "@/components/console/ui";
@@ -23,7 +24,7 @@ export default function Cases() {
   const [f, setF] = useState({ q: "", status: "", band: "", flagged: false });
 
   useEffect(() => {
-    const t = setTimeout(() => api.get("/cases", { params: { ...scope, ...f, status: f.status || undefined, band: f.band || undefined, q: f.q || undefined } }).then((r) => setRows(r.data)), 200);
+    const t = setTimeout(() => api.get("/cases", { params: { ...scope, ...f, status: f.status || undefined, band: f.band || undefined, q: f.q || undefined } }).then((r) => setRows(r.data)).catch((e) => { setRows([]); toast.error(errMsg(e)); }), 200);
     return () => clearTimeout(t);
   }, [f, persona.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = (k) => (v) => setF((p) => ({ ...p, [k]: v }));

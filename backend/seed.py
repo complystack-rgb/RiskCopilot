@@ -39,7 +39,7 @@ def now():
 
 
 def new_lead_id(n):
-    return f"ZIN-FIRE-{26_000 + n}"
+    return f"ZIN-FIRE-{26_000 + n:05d}"
 
 
 def ev(actor, action, detail, at):
@@ -108,3 +108,4 @@ async def seed(db, force=False):
     await db.agents.insert_many([dict(a) for a in agents])
     cases = [build_case(i + 1, *s, agents, rnd) for i, s in enumerate(SMES)]
     await db.cases.insert_many(cases)
+    await db.counters.update_one({"_id": "lead"}, {"$set": {"n": len(cases)}}, upsert=True)

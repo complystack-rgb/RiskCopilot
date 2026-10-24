@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,10 @@ export const BrokerReviewDialog = ({ open, onOpenChange, data, engine }) => {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(() => JSON.parse(localStorage.getItem(KEY) || "null"));
   const result = done?.business === data.businessName ? done : null;
+
+  useEffect(() => {
+    if (open && result) api.get(`/cases/${result.case_id}`).catch(() => { localStorage.removeItem(KEY); setDone(null); });
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async () => {
     setBusy(true);

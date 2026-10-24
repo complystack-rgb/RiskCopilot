@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ const PersonaSwitcher = () => {
     ...(meta?.orgs || []).map((o) => ({ label: o.name, items: personas.filter((p) => p.org_id === o.id) }))];
   return (
     <Select value={persona.id} onValueChange={setPersonaId}>
-      <SelectTrigger data-testid="persona-switcher" className="h-10 w-[260px] border-slate-300 bg-white text-left">
+      <SelectTrigger data-testid="persona-switcher" className="h-10 w-[200px] sm:w-[260px] border-slate-300 bg-white text-left">
         <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0A1F44] text-[10px] font-bold text-white">{persona.name.split(" ").map((s) => s[0]).join("").slice(0, 2)}</span>
           <div className="min-w-0 leading-tight"><p className="truncate text-xs font-semibold text-slate-900">{persona.name}</p><p className="truncate text-[10px] text-slate-500">{persona.title}</p></div>
@@ -39,13 +40,17 @@ const PersonaSwitcher = () => {
 };
 
 const Shell = () => {
-  const { persona, meta, loadMeta } = useConsole();
-  const reset = async () => { await api.post("/console/reset-demo"); await loadMeta(); toast.success("Demo data reset"); window.location.reload(); };
+  const { persona, meta } = useConsole();
+  const reset = async () => {
+    if (!window.confirm("Reset all demo data? Cases, team changes and cyber checks will go back to the starting set.")) return;
+    await api.post("/console/reset-demo"); localStorage.removeItem("complystack_last_lead"); sessionStorage.setItem("cs_reset", "1"); window.location.reload();
+  };
+  useEffect(() => { if (sessionStorage.getItem("cs_reset")) { sessionStorage.removeItem("cs_reset"); toast.success("Demo data reset"); } }, []);
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 lg:px-6">
-        <div className="flex items-center gap-4"><Link to="/console"><BrandBar /></Link><span className="hidden md:inline rounded-md bg-[#0A1F44] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">Partner console</span></div>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-4"><Link to="/console" className="min-w-0"><BrandBar /></Link><span className="hidden xl:inline rounded-md bg-[#0A1F44] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">Partner console</span></div>
+        <div className="flex shrink-0 items-center gap-2">
           <button data-testid="reset-demo-btn" onClick={reset} className="hidden lg:flex items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100"><Icons.RotateCcw className="h-3.5 w-3.5" /> Reset demo</button>
           <Link to="/" data-testid="open-sme-journey" className="hidden lg:flex items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100"><Icons.ExternalLink className="h-3.5 w-3.5" /> SME journey</Link>
           <PersonaSwitcher />

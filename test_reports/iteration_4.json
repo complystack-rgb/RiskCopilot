@@ -1,0 +1,53 @@
+{
+  "summary": "Iteration 4: Partner Console plus the SME broker-review handoff. Backend: 18 pytest tests (meta, stats scoping, case filters, create with auto-assign, status/notes/recommendation flags/review/assign, package, X-API-Key partner API, team CRUD, cyber scan on www.petronas.com MY). 16 pass, 2 fail, both 500s on bad input. Frontend (Playwright, 1920x1080): these flows passed: SME /quote Step 7 -> broker-review -> success (ZIN-FIRE-26113, Bharat, Imran) -> open-in-console showing the LIVE case; Imran agent workflow (schedule -> inspect -> recommendation with 4 flags -> Insurer review); insurer request-justification -> approve, reassign, note, audit trail, API tab; Summary indicators jump to Evidence; annotation-P2-0 detail; P1-P5 thumbs; 6 video frames; machinery (6 rows); prior policy; persona-scoped KPIs (insurer 13 / Ritika 5 / Imran 2); queue search, status, band and flagged filters; Oversight KPIs with 8 Review links; Ritika team add agent, toggle off (persists), duplicate-email toast; cyber scan grade B with 11 findings and history; reset-demo reseeds to 12 cases. No JS errors in the normal flows.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/cases?q=(", "issue": "Returns 500. q goes straight into Mongo $regex without re.escape, so an invalid regex throws. Seen in the UI: typing '(' in case-search triggers the 500 and an unhandled promise rejection (Cases.jsx has no .catch), the Emergent dev overlay then blocks clicks, and the count stays stale."},
+      {"endpoint": "POST /api/cyber/scan {url:'https://'}", "issue": "Returns 500 with AttributeError: 'NoneType' object has no attribute 'startswith' (cyber_scan.py line 37). The URL needs validating (hostname is None) and the endpoint should return 422."},
+      {"endpoint": "POST /api/cyber/scan", "issue": "_cert() (sync socket, 5s timeout) and dns.resolver (4s each) are blocking calls inside an async handler and freeze the event loop for every request. Wrap them in asyncio.to_thread. There is also no SSRF guard: internal hosts and IPs are accepted."},
+      {"endpoint": "POST /api/cases", "issue": "Lead IDs use count_documents+101, so live leads are ZIN-FIRE-26113 while seeded ones are 26001-26012. This is inconsistent, can produce duplicates under concurrency, and there is no unique index."},
+      {"endpoint": "POST /api/cases/{id}/status, /assign, /recommendation", "issue": "No state machine. Status can be set back to inspected/assigned on approved cases, cases can be reassigned after approval, and an agent can submit a recommendation before inspection (UI canRecommend also allows it from 'assigned')."},
+      {"endpoint": "GET /api/console/stats & Oversight", "issue": "Flags on approved cases are never resolved or cleared, so the 'Open flags' and 'Mis-selling flags' KPIs and the flagged filter still count approved cases."},
+      {"endpoint": "POST /api/console/reset-demo", "issue": "Does not clear the cyber_scans collection, so test scans persist."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Cases.jsx fetch", "issue": "No error handling on the /cases call. A backend error causes an unhandled rejection and a blocking overlay, and no error is shown to the user.", "selector": "[data-testid='case-search']", "priority": "MEDIUM"},
+      {"component": "SummaryTab Checklist", "issue": "Inspection checklist is saved only in localStorage, not server-side (the brief asks for MongoDB). It is not shared between agent and insurer and is not in the audit trail.", "selector": "[data-testid^='checklist-item-']", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Oversight Review link", "issue": "flag-open-* opens the case on the Summary tab, not the Recommendation tab where the flags are.", "affected_selectors": ["[data-testid^='flag-open-']"]},
+      {"flow": "SME broker review after reset", "issue": "complystack_last_lead in localStorage keeps showing 'booked' with an open-in-console link to a deleted case ('Case not found').", "affected_selectors": ["[data-testid='open-in-console']"]}
+    ],
+    "design_issues": [
+      {"screen": "Console header at tablet 768px", "issues": ["Horizontal overflow (scrollWidth 899px).", "ComplyStack logo overlaps the PARTNER CONSOLE badge.", "Reset demo and SME journey buttons are pushed off-screen."]},
+      {"screen": "Console toasts", "issues": ["Sonner toasts at top-right cover the persona switcher for several seconds after each action."]},
+      {"screen": "Reset demo", "issues": ["Destructive reset runs with no confirmation and no success toast."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_console_api.py", "/app/test_reports/pytest/pytest_console.xml"],
+  "action_items": [
+    "Escape the q regex in /api/cases with re.escape(q) and add .catch plus an error state to the Cases.jsx fetch",
+    "Validate the cyber URL (hostname None -> 422), run _cert/_txt via asyncio.to_thread, and consider blocking private/internal hosts",
+    "Generate lead IDs safely (max+1 or a counter) and add a unique index on lead_id",
+    "Add status-transition guards (no recommendation before inspection, no changes to approved/declined cases)",
+    "Exclude flags on approved/declined cases from the open-flag KPIs and Oversight queue, or mark them resolved",
+    "Fix the console header at <=768px (overflow and logo overlap)",
+    "Optional: save the checklist server-side, make the Oversight Review link open the Recommendation tab, clear cyber_scans and stale localStorage on reset"
+  ],
+  "critical_code_review_comments": [
+    "server.py: no Pydantic constraints (empty note text, empty review comment for decline, agent email not validated as EmailStr)",
+    "Agent persona can open any case by URL and see the reassign-free view; there is no scope check on /cases/{id} (acceptable for a demo without login)",
+    "Deactivating an agent leaves their open cases assigned to them with no reassignment prompt",
+    "SmeSubmit stores the raw journey dict unvalidated in Mongo"
+  ],
+  "updated_files": ["/app/backend/tests/test_console_api.py"],
+  "success_rate": {"backend": "89% (16/18)", "frontend": "~95% (all requested flows pass; issues are edge cases and responsive layout)"},
+  "test_credentials": "No login. X-API-Key: cs_demo_zurich_7f3a91c2. Note: /app/memory/test_credentials.md is outdated (still says frontend-only, no backend).",
+  "seed_data_creation": "Created TEST_ case (ZIN-FIRE-26113), TEST_ agents and cyber scans. POST /api/console/reset-demo was called at the end (cases and agents reseeded; cyber_scans remain).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Seed has no 'assigned' case for ag-imran. To test the agent workflow, submit an SME case with state Gujarat (auto-assigned to Imran). For the fastest SME path, set localStorage complystack_journey_v1 and click step-tab-7, then broker-review-btn. Persona options are Radix Select items: click persona-switcher, then persona-option-<id> with force=True. Avoid typing regex characters in case-search until fixed (the overlay blocks later clicks). Run pytest with the default xdist config from /app/backend/pytest.ini."
+}

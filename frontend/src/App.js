@@ -30,7 +30,7 @@ function App() {
             </Route>
           </Routes>
         </BrowserRouter>
-        <Toaster position="top-right" richColors />
+        <Toaster position="bottom-right" richColors />
       </JourneyProvider>
     </div>
   );

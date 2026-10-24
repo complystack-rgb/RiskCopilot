@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "@/lib/api";
@@ -40,7 +40,8 @@ export default function CaseDetail() {
   const { id } = useParams();
   const { orgName, agentName } = useConsole();
   const [c, setC] = useState(null);
-  const [tab, setTab] = useState("summary");
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState(params.get("tab") || "summary");
   const [focus, setFocus] = useState(null);
   useEffect(() => { api.get(`/cases/${id}`).then((r) => setC(r.data)).catch(() => setC(false)); }, [id]);
   if (c === false) return <p className="text-sm text-slate-500">Case not found. <Link to="/console/cases" className="text-blue-600">Back to queue</Link></p>;
@@ -76,7 +77,7 @@ export default function CaseDetail() {
           ))}
         </TabsList>
         <div className="mt-5">
-          <TabsContent value="summary"><SummaryTab c={c} onEvidence={onEvidence} /></TabsContent>
+          <TabsContent value="summary"><SummaryTab c={c} onEvidence={onEvidence} onUpdate={setC} /></TabsContent>
           <TabsContent value="evidence"><EvidenceTab r={c.report} focus={focus} /></TabsContent>
           <TabsContent value="machinery"><MachineryTab r={c.report} /></TabsContent>
           <TabsContent value="policy"><PriorPolicyTab r={c.report} /></TabsContent>

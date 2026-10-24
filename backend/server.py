@@ -2,11 +2,12 @@ from fastapi import FastAPI, APIRouter, HTTPException, Header, Query
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import os
+import re
 import uuid
 import logging
 
@@ -23,6 +24,10 @@ app = FastAPI(title="ComplyStack API")
 api = APIRouter(prefix="/api")
 NO_ID = {"_id": 0}
 OPEN = ["new", "assigned", "inspection_scheduled", "inspected", "recommendation_submitted", "justification_requested"]
+CLOSED = {"approved", "declined"}
+RECOMMENDABLE = {"inspected", "recommendation_submitted", "justification_requested"}
+TRANSITIONS = {"new": {"declined"}, "assigned": {"inspection_scheduled", "declined"}, "inspection_scheduled": {"inspected", "assigned", "declined"},
+               "inspected": {"declined"}, "recommendation_submitted": {"declined"}, "justification_requested": {"declined"}}
 REGION = {"Gujarat": "org-bharat", "Maharashtra": "org-bharat", "Goa": "org-bharat", "Tamil Nadu": "org-kavach", "Karnataka": "org-kavach", "Kerala": "org-kavach",
           "Andhra Pradesh": "org-kavach", "Telangana": "org-kavach", "Punjab": "org-sarthi", "Haryana": "org-sarthi", "Delhi": "org-sarthi", "Rajasthan": "org-sarthi", "Uttar Pradesh": "org-sarthi"}
 
@@ -50,7 +55,7 @@ class StatusIn(BaseModel):
 
 
 class NoteIn(BaseModel):
-    text: str
+    text: str = Field(min_length=1, max_length=2000)
     actor: str
 
 
@@ -67,9 +72,9 @@ class ReviewIn(BaseModel):
 
 
 class AgentIn(BaseModel):
-    name: str
-    email: str
-    city: str
+    name: str = Field(min_length=2)
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    city: str = Field(min_length=2)
     role: str = "agent"
 
 
@@ -100,6 +105,7 @@ async def push(case_id, update, event):
 @app.on_event("startup")
 async def startup():
     await seed(db)
+    await db.cases.create_index("lead_id", unique=True)
 
 
 @api.get("/")
@@ -142,7 +148,7 @@ async def stats(org_id: Optional[str] = None, agent_id: Optional[str] = None):
         by_band[b] = by_band.get(b, 0) + 1
         si += c["report"]["total_sum_insured"]
         prem += sum(r["premium"] for r in c["report"]["engine_recommendations"] if r["priority"] != "Optional")
-        flags += len(c.get("flags") or [])
+        flags += len(c.get("flags") or []) if c["status"] in OPEN else 0
         if c["status"] in OPEN and datetime.fromisoformat(c["sla_due"]) < t:
             breaches += 1
     orgs = await db.orgs.find({}, NO_ID).to_list(100)
@@ -156,7 +162,7 @@ async def stats(org_id: Optional[str] = None, agent_id: Optional[str] = None):
             got = set(c["agent_recommendation"]["products"])
             align.append(len(need & got) / len(need) if need else 1)
         league.append({"org_id": o["id"], "name": o["name"], "cases": len(oc), "open": sum(c["status"] in OPEN for c in oc),
-                       "approved": sum(c["status"] == "approved" for c in oc), "flags": sum(len(c.get("flags") or []) for c in oc),
+                       "approved": sum(c["status"] == "approved" for c in oc), "flags": sum(len(c.get("flags") or []) for c in oc if c["status"] in OPEN),
                        "alignment": round(100 * sum(align) / len(align)) if align else None})
     return {"total": len(cases), "by_status": by_status, "by_band": by_band, "sla_breaches": breaches, "total_sum_insured": si,
             "indicative_premium": prem, "open_flags": flags, "league": [l for l in league if l["cases"] or not org_id],
@@ -172,8 +178,10 @@ async def list_cases(org_id: Optional[str] = None, agent_id: Optional[str] = Non
         query["report.fire_band"] = band
     if flagged:
         query["flags.0"] = {"$exists": True}
+        query.setdefault("status", {"$in": OPEN})
     if q:
-        query["$or"] = [{"lead_id": {"$regex": q, "$options": "i"}}, {"sme.business_name": {"$regex": q, "$options": "i"}}, {"sme.city": {"$regex": q, "$options": "i"}}]
+        rx = {"$regex": re.escape(q), "$options": "i"}
+        query["$or"] = [{"lead_id": rx}, {"sme.business_name": rx}, {"sme.city": rx}]
     proj = {"_id": 0, "id": 1, "lead_id": 1, "created_at": 1, "updated_at": 1, "sme": 1, "status": 1, "sla_due": 1, "distributor_id": 1, "agent_id": 1, "flags": 1, "source": 1,
             "report.fire_score": 1, "report.fire_band": 1, "report.total_sum_insured": 1, "report.product_line": 1, "agent_recommendation": 1, "review": 1}
     return await db.cases.find(query, proj).sort("created_at", -1).to_list(1000)
@@ -201,8 +209,8 @@ async def create_case(body: SmeSubmit):
     j = body.journey
     if not j.get("businessName"):
         raise HTTPException(400, "Business name is required")
-    n = await db.cases.count_documents({}) + 1
-    lead = new_lead_id(n + 100)
+    ctr = await db.counters.find_one_and_update({"_id": "lead"}, {"$inc": {"n": 1}}, upsert=True, return_document=True)
+    lead = new_lead_id(ctr["n"])
     sme = {"business_name": j["businessName"], "category": j.get("category"), "activity": j.get("activity") or "", "city": j.get("city", ""), "state": j.get("state", ""),
            "country": "India", "headcount": j.get("headcount"), "revenue_band": j.get("revenueBand"), "contact_name": body.contact_name, "phone": body.contact_phone,
            "has_insurance": j.get("hasInsurance") == "Yes", "premises_owned": j.get("premisesOwnership") == "Owned by the business",
@@ -228,19 +236,20 @@ async def create_case(body: SmeSubmit):
 @api.post("/cases/{case_id}/assign")
 async def assign(case_id: str, body: AssignIn):
     c = await get_case(case_id)
-    a = await db.agents.find_one({"id": body.agent_id}, NO_ID)
+    if c["status"] in CLOSED:
+        raise HTTPException(400, "Closed cases cannot be reassigned")
+    a = await db.agents.find_one({"id": body.agent_id, "active": True}, NO_ID)
     if not a:
-        raise HTTPException(404, "Agent not found")
+        raise HTTPException(404, "Active agent not found")
     status = "assigned" if c["status"] == "new" else c["status"]
     return await push(c["id"], {"$set": {"agent_id": a["id"], "distributor_id": a["org_id"], "status": status}}, ev(body.actor, "assigned", f"Assigned to {a['name']}", datetime.now(timezone.utc)))
 
 
 @api.post("/cases/{case_id}/status")
 async def set_status(case_id: str, body: StatusIn):
-    allowed = {"inspection_scheduled", "inspected", "declined", "assigned"}
-    if body.status not in allowed:
-        raise HTTPException(400, "Invalid status")
     c = await get_case(case_id)
+    if body.status not in TRANSITIONS.get(c["status"], set()):
+        raise HTTPException(400, f"Cannot move a case from {c['status']} to {body.status}")
     return await push(c["id"], {"$set": {"status": body.status}}, ev(body.actor, body.status, body.note or body.status.replace("_", " ").capitalize(), datetime.now(timezone.utc)))
 
 
@@ -252,6 +261,19 @@ async def add_note(case_id: str, body: NoteIn):
     return await push(c["id"], {}, ev(body.actor, "note", body.text[:140], datetime.now(timezone.utc)))
 
 
+class CheckIn(BaseModel):
+    done: List[int]
+    actor: str
+
+
+@api.post("/cases/{case_id}/checklist")
+async def checklist(case_id: str, body: CheckIn):
+    c = await get_case(case_id)
+    total = len(c["report"]["inspection_checklist"])
+    done = sorted({i for i in body.done if 0 <= i < total})
+    return await push(c["id"], {"$set": {"checklist_done": done}}, ev(body.actor, "checklist", f"Inspection checklist {len(done)}/{total} verified", datetime.now(timezone.utc)))
+
+
 @api.post("/cases/{case_id}/recommendation")
 async def recommend(case_id: str, body: RecommendIn):
     if not body.products:
@@ -260,6 +282,8 @@ async def recommend(case_id: str, body: RecommendIn):
     if bad:
         raise HTTPException(400, f"Unknown product: {bad[0]}")
     c = await get_case(case_id)
+    if c["status"] not in RECOMMENDABLE:
+        raise HTTPException(400, "A recommendation can only be submitted after the site inspection")
     flags = misselling_flags(c["report"]["engine_recommendations"], body.products, body.justification)
     rec = {"products": body.products, "justification": body.justification, "agent": body.actor, "submitted_at": now()}
     return await push(c["id"], {"$set": {"agent_recommendation": rec, "flags": flags, "status": "recommendation_submitted", "review": None}},
@@ -272,8 +296,10 @@ async def review(case_id: str, body: ReviewIn):
     if not status:
         raise HTTPException(400, "Invalid decision")
     c = await get_case(case_id)
-    if not c.get("agent_recommendation"):
-        raise HTTPException(400, "There is no agent recommendation to review yet")
+    if not c.get("agent_recommendation") or c["status"] != "recommendation_submitted":
+        raise HTTPException(400, "There is no pending agent recommendation to review")
+    if body.decision == "request_justification" and not body.comment.strip():
+        raise HTTPException(400, "Add a comment explaining what needs justifying")
     rv = {"decision": body.decision, "comment": body.comment, "by": body.actor, "at": now()}
     return await push(c["id"], {"$set": {"review": rv, "status": status}}, ev(body.actor, status, body.comment or status, datetime.now(timezone.utc)))
 
@@ -403,6 +429,7 @@ async def cyber_get(scan_id: str):
 @api.post("/console/reset-demo")
 async def reset_demo():
     await seed(db, force=True)
+    await db.cyber_scans.delete_many({})
     return {"ok": True}
 
 

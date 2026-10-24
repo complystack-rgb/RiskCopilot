@@ -33,7 +33,7 @@ export default function Oversight() {
                   <span className={`w-fit shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-semibold ${TYPE[f.type][1]}`}>{TYPE[f.type][0]}</span>
                   <div className="min-w-0 flex-1"><p className="text-sm text-slate-800">{f.text}</p><p className="text-[11px] text-slate-500"><span className="font-mono">{f.c.lead_id}</span> · {f.c.sme.business_name} · {agentName(f.c.agent_id)} ({orgName(f.c.distributor_id)})</p></div>
                   <StatusBadge status={f.c.status} />
-                  <Link to={`/console/cases/${f.c.id}`} data-testid={`flag-open-${f.c.lead_id}-${i}`} className="shrink-0 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">Review</Link>
+                  <Link to={`/console/cases/${f.c.id}?tab=recommendation`} data-testid={`flag-open-${f.c.lead_id}-${i}`} className="shrink-0 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">Review</Link>
                 </li>
               ))}
             </ul>
