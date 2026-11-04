@@ -29,7 +29,7 @@ export default function Step3Priorities() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader title="What would be hardest for your business to lose?" lead="Every business depends on different things. Pick what would be hardest to lose or recover from, choose as many as apply." />
+      <SectionHeader title="What would be hardest for your business to lose?" lead="Select all that apply." />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {PRIORITIES.map((p) => (
@@ -48,7 +48,7 @@ export default function Step3Priorities() {
 
       {isNotSure && (
         <div className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-          <p className="text-sm font-medium text-blue-900">No problem, two quick questions will help us point you in the right direction.</p>
+          <p className="text-sm font-medium text-blue-900">Answer two quick questions instead.</p>
           <div>
             <FieldLabel>1. What assets or resources would be hardest to replace?</FieldLabel>
             <Textarea data-testid="notsure-assets" value={data.notSureAssets} onChange={(e) => update({ notSureAssets: e.target.value })} placeholder="e.g. our main oven, our customer records..." />

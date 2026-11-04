@@ -32,7 +32,7 @@ const PersonaSwitcher = () => {
     <Select value={persona.id} onValueChange={setPersonaId}>
       <SelectTrigger data-testid="persona-switcher" className="h-10 w-[52px] sm:w-[200px] xl:w-[250px] border-slate-200 bg-white text-left">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{persona.name.split(" ").map((s) => s[0]).join("").slice(0, 2)}</span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[10px] font-semibold text-white">{persona.name.split(" ").map((s) => s[0]).join("").slice(0, 2)}</span>
           <div className="hidden min-w-0 leading-tight sm:block"><p className="truncate text-xs font-semibold text-slate-900">{persona.name}</p><p className="truncate text-[10px] text-slate-500">{persona.title}</p></div>
         </div>
       </SelectTrigger>

@@ -59,7 +59,7 @@ export default function CaseDetail() {
           <div className="flex gap-4">
             <img src={c.photos[0].image} alt="" className="hidden h-20 w-28 rounded-lg object-cover sm:block" />
             <div><div className="flex flex-wrap items-center gap-2"><span className="font-mono text-xs text-slate-500" data-testid="case-lead-id">{c.lead_id}</span><StatusBadge status={c.status} /><BandBadge band={c.assessment.risk_band}>Risk {c.assessment.risk_score}</BandBadge></div>
-              <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900" data-testid="case-sme-name">{c.sme.business_name}</h1>
+              <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900" data-testid="case-sme-name">{c.sme.business_name}</h1>
               <p className="text-sm text-slate-500">{c.sme.industry} · {c.sme.city}, {c.sme.region} · {c.sme.employees} employees</p></div>
           </div>
           <Actions c={c} onUpdate={setC} />

@@ -81,7 +81,7 @@ export const ClimateTab = ({ c }) => {
           <Bar yAxisId="r" dataKey="rain_mm" name="Rainfall (mm)" fill="#2563EB" radius={[4, 4, 0, 0]} /><Line yAxisId="t" dataKey="tmax_c" name="Avg max temp (°C)" stroke="#EA580C" strokeWidth={2} dot={false} />
         </ComposedChart></ResponsiveContainer></div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">{[["Annual rainfall", `${d.annual_rain_mm} mm`], ["Heavy rain days", `${d.heavy_rain_days_per_year}/yr`], ["Heat days ≥35°C", `${d.heat_days_per_year}/yr`], ["Max wind gust", `${d.max_wind_kmh} km/h`]].map(([k, v]) => (
-          <div key={k} className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] uppercase tracking-wider text-slate-400">{k}</p><p className="mt-1 font-mono text-lg font-bold">{v}</p></div>))}</div>
+          <div key={k} className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] uppercase tracking-wider text-slate-400">{k}</p><p className="mt-1 font-mono text-lg font-semibold">{v}</p></div>))}</div>
         <p className="mt-3 text-[10px] text-slate-400">{d.source}</p>
       </Panel>
       <Panel title="What this means for the business" icon={Icons.Thermometer} className="lg:col-span-2" testid="climate-impacts">

@@ -17,7 +17,7 @@ export const ZURICH_PRODUCTS = [
   {
     id: "combined-liability",
     name: "Combined Liability",
-    tagline: "Employers', Public and Products Liability — combined or standalone, with optional Legal Expenses.",
+    tagline: "Employers', Public and Products Liability, combined or standalone, with optional Legal Expenses.",
     icon: "ShieldCheck",
     industries: ["manufacturing", "construction", "hospitality", "healthcare", "wholesale", "retail", "agriculture", "repair", "professional", "it", "other", "trading", "transport", "education"],
     priorities: ["employees", "thirdparty"],
@@ -27,7 +27,7 @@ export const ZURICH_PRODUCTS = [
   {
     id: "contractors-combined",
     name: "Contractors' Combined",
-    tagline: "For construction and allied trades — property, plant, liability and contract works.",
+    tagline: "For construction and allied trades, property, plant, liability and contract works.",
     icon: "HardHat",
     industries: ["construction"],
     priorities: ["machinery", "thirdparty", "premises", "assets"],
@@ -47,7 +47,7 @@ export const ZURICH_PRODUCTS = [
   {
     id: "office-surgery",
     name: "Office and Surgery",
-    tagline: "For offices, clinics and clerical trades — property damage, loss of revenue and legal claims.",
+    tagline: "For offices, clinics and clerical trades, property damage, loss of revenue and legal claims.",
     icon: "Stethoscope",
     industries: ["professional", "it", "healthcare", "education", "realestate"],
     priorities: ["premises", "assets", "thirdparty", "continuity"],

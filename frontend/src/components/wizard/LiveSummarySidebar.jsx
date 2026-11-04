@@ -24,7 +24,7 @@ export default function LiveSummarySidebar() {
             <Icons.ShieldCheck className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">Live business summary</p>
+            <p className="text-sm font-semibold text-slate-900">Live business summary</p>
             <p className="text-[11px] text-slate-400">Updates as you go</p>
           </div>
         </div>
@@ -33,7 +33,7 @@ export default function LiveSummarySidebar() {
           <p className="text-sm text-slate-400">Your business snapshot will build here as you answer each step.</p>
         ) : (
           <div className="space-y-3.5">
-            <Row icon={Icons.Building2} label="Business" value={data.businessName || "—"} />
+            <Row icon={Icons.Building2} label="Business" value={data.businessName || "N/A"} />
             {data.category && <Row icon={Icons.Tag} label="Activity" value={`${categoryLabel(data.category)}${data.activity ? ` · ${data.activity}` : ""}`} />}
             {(data.city || data.state) && <Row icon={Icons.MapPin} label="Location" value={[data.city, data.state].filter(Boolean).join(", ")} />}
             {data.startYear && <Row icon={Icons.CalendarClock} label="Started" value={data.yearNotSure ? "Not sure" : data.startYear} />}
@@ -56,7 +56,7 @@ export default function LiveSummarySidebar() {
         )}
       </div>
       <p className="px-1 text-[11px] leading-relaxed text-slate-400">
-        This is a preliminary discovery summary to help you understand your business — not a final insurance recommendation.
+        This is a preliminary discovery summary to help you understand your business, not a final insurance recommendation.
       </p>
     </aside>
   );

@@ -1,20 +1,20 @@
 // ComplyStack deterministic SME risk & recommendation engine.
 // Scores every meaningful input, derives exposure areas, maps the business to Zurich SME
 // products, and produces indicative (non-binding) annual premium estimates plus an
-// underwriting-style narrative. Fully deterministic — no external AI call.
+// underwriting-style narrative. Fully deterministic, no external AI call.
 
 import { ZURICH_PRODUCTS } from "@/data/zurichProducts";
 import { categoryLabel } from "@/lib/summary";
 
 const REVENUE_MID = {
-  "₹50 lakh–₹1 crore": 7500000,
-  "₹1–5 crore": 30000000,
-  "₹5–25 crore": 150000000,
-  "₹25–50 crore": 375000000,
+  "₹50 lakh to ₹1 crore": 7500000,
+  "₹1 to 5 crore": 30000000,
+  "₹5 to 25 crore": 150000000,
+  "₹25 to 50 crore": 375000000,
   "Above ₹50 crore": 750000000,
 };
 const HEADCOUNT_MID = {
-  "Just me": 1, "2–5": 3, "6–10": 8, "11–20": 15, "21–50": 35, "51–100": 75, "More than 100": 150,
+  "Just me": 1, "2 to 5": 3, "6 to 10": 8, "11 to 20": 15, "21 to 50": 35, "51 to 100": 75, "More than 100": 150,
 };
 
 export const fmtINR = (n) => {
@@ -165,7 +165,7 @@ export function recommendProducts(d) {
     if (industryMatch) reasonLines.push(`Designed for ${sectorPhrase(d.category).replace(/^an? /, "")} businesses like yours.`);
     matchedPriorities.forEach((mp) => {
       const m = { premises: "protecting your premises", machinery: "covering machinery you depend on", stock: "covering stock and materials", assets: "covering business assets", continuity: "protecting income if operations stop", employees: "meeting employee obligations", thirdparty: "covering third-party liability", vehicles: "covering vehicles and goods in transit" };
-      if (m[mp]) reasonLines.push(`Directly addresses ${m[mp]} — which you flagged as hard to lose.`);
+      if (m[mp]) reasonLines.push(`Directly addresses ${m[mp]}, which you flagged as hard to lose.`);
     });
     if (reasonLines.length === 0) reasonLines.push("A common SME baseline cover worth reviewing.");
 
@@ -191,24 +191,24 @@ export function buildNarrative(d, exposure, recs) {
   const ranked = [...exposure.areas].sort((a, b) => b.score - a.score);
   if (d.revenueBand || d.headcount) {
     const topTwo = ranked.slice(0, 2).map((a) => `${a.label.toLowerCase()} (${a.level})`).join(" and ");
-    lines.push(`With an estimated turnover around ${fmtINR(turnover)} and roughly ${employees} people, your size feeds directly into the scores — your highest-scoring areas are ${topTwo}.`);
+    lines.push(`With an estimated turnover around ${fmtINR(turnover)} and roughly ${employees} people, your size feeds directly into the scores, your highest-scoring areas are ${topTwo}.`);
   }
 
   const hi = ranked[0];
   if (hi) lines.push(`What drives your ${hi.label.toLowerCase()} score most: ${hi.factors.slice(0, 2).map((f) => f.replace(/^[+-]\d+ /, "")).join("; ") || "limited information available"}.`);
 
-  if (d.premisesOwnership === "Owned by the business") lines.push("Because the business owns its premises, buildings sit on your balance sheet — property cover becomes more central than for a tenant.");
-  else if (d.premisesOwnership === "Rented or leased") lines.push("As a tenant, the building itself may be the landlord's responsibility, but your fit-out, stock and contents usually are not — a common blind spot.");
+  if (d.premisesOwnership === "Owned by the business") lines.push("Because the business owns its premises, buildings sit on your balance sheet, property cover becomes more central than for a tenant.");
+  else if (d.premisesOwnership === "Rented or leased") lines.push("As a tenant, the building itself may be the landlord's responsibility, but your fit-out, stock and contents usually are not, a common blind spot.");
   if (d.locationType === "Multiple locations") lines.push("Operating from multiple locations multiplies both property and liability touchpoints; policies should list every site.");
-  if (["No", "Not sure"].includes(d.fireProtection)) lines.push("Fire protection is unconfirmed. We have not assumed it is absent — but confirming it could reduce property premiums.");
+  if (["No", "Not sure"].includes(d.fireProtection)) lines.push("Fire protection is unconfirmed. We have not assumed it is absent, but confirming it could reduce property premiums.");
 
-  if (d.hasInsurance === "No") lines.push("You reported no current commercial insurance. That isn't a verdict of underinsurance — it simply means every recommended product below represents a fresh consideration rather than a comparison.");
+  if (d.hasInsurance === "No") lines.push("You reported no current commercial insurance. That isn't a verdict of underinsurance, it simply means every recommended product below represents a fresh consideration rather than a comparison.");
   else if (d.hasInsurance === "Yes") {
     const gaps = recs.filter((r) => r.isGap);
-    if (gaps.length) lines.push(`You already hold some cover, but ${gaps.map((g) => g.product.name).join(", ")} appears to address priorities your listed policies may not — worth verifying against the wording.`);
+    if (gaps.length) lines.push(`You already hold some cover, but ${gaps.map((g) => g.product.name).join(", ")} appears to address priorities your listed policies may not, worth verifying against the wording.`);
     else lines.push("Your listed cover broadly aligns with your priorities; the main task is verifying limits, exclusions and valuations.");
   }
-  if (d.hasClaim === "Yes") lines.push("A prior claim is noted. Insurers price for this, but it does not make you uninsurable — context and remediation matter more than the claim alone.");
+  if (d.hasClaim === "Yes") lines.push("A prior claim is noted. Insurers price for this, but it does not make you uninsurable, context and remediation matter more than the claim alone.");
 
   const headline = `${exposure.overall.level} overall exposure profile`;
   return { headline, narrative: lines };

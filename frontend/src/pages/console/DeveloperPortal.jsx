@@ -23,7 +23,7 @@ const Docs = () => (
     <div className="space-y-6 lg:col-span-2">
       {EPS.map((e) => (
         <Panel key={e.p} testid={`endpoint-${e.m}-${e.p.split("/")[2] || "list"}`}>
-          <div className="flex items-center gap-2"><span className={`rounded px-2 py-0.5 font-mono text-[11px] font-bold text-white ${e.m === "GET" ? "bg-emerald-600" : "bg-blue-600"}`}>{e.m}</span><code className="font-mono text-sm font-semibold text-slate-900">/api/v1{e.p}</code></div>
+          <div className="flex items-center gap-2"><span className={`rounded px-2 py-0.5 font-mono text-[11px] font-semibold text-white ${e.m === "GET" ? "bg-emerald-600" : "bg-blue-600"}`}>{e.m}</span><code className="font-mono text-sm font-semibold text-slate-900">/api/v1{e.p}</code></div>
           <p className="mt-2 text-sm text-slate-600">{e.d}</p>
           <div className="mt-3"><Code>{`curl -X ${e.m} "${BASE}${e.p.replace("{lead_id}", "ZIN-26003").split("?")[0]}" \\\n  -H "X-API-Key: <your partner key>"${e.body ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${e.body.replace(/\n\s*/g, " ")}'` : ""}`}</Code></div>
         </Panel>))}
@@ -61,7 +61,7 @@ const Sandbox = () => {
           <p className="mt-3 text-[11px] text-slate-500">This runs the same logic as <code className="font-mono">POST /api/v1/leads/{"{lead_id}"}/decision</code>. The broker sees the result on the case straight away.</p>
         </Panel>
       </div>
-      <Panel title="Response" icon={Icons.Braces} className="lg:col-span-3" action={res && <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${res.ok ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{res.ok ? "200 OK" : "ERROR"}</span>}>
+      <Panel title="Response" icon={Icons.Braces} className="lg:col-span-3" action={res && <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-semibold ${res.ok ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{res.ok ? "200 OK" : "ERROR"}</span>}>
         <pre data-testid="dev-response" className={`max-h-[640px] overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-[11px] leading-relaxed ${res && !res.ok ? "text-rose-300" : "text-emerald-300"}`}>{res ? JSON.stringify(res.data, null, 2) : "// Send a request to see the JSON response"}</pre>
       </Panel>
     </div>

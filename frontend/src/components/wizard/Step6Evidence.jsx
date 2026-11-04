@@ -12,7 +12,7 @@ export default function Step6Evidence() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader title="Evidence that helps us understand your business" lead="Optional. A short walkthrough video and a few machine photos help your partner prepare before visiting." />
+      <SectionHeader title="Photos and Documents" lead="Optional. A short walkthrough video and a few machine photos help your partner prepare before visiting." />
 
       <div className="rounded-xl border border-slate-200 bg-white p-4">
         <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.Video className="h-4 w-4 text-blue-600" /> Premises walkthrough</p>
@@ -56,7 +56,7 @@ export default function Step6Evidence() {
             <li className="flex items-center gap-2"><Icons.Cog className="h-4 w-4 text-slate-400" /> Machinery photos: {data.machineryPhotos.length}</li>
             <li className="flex items-center gap-2"><Icons.FileText className="h-4 w-4 text-slate-400" /> Policy documents: {data.evidencePolicyDocs.length}</li>
           </ul>
-          <p className="mt-3 text-xs text-slate-500">Stored for this session. Automated reads are preliminary and marked as demos.</p>
+          <p className="mt-3 text-xs text-slate-500">Files are shared only with your assigned partner.</p>
         </RewardCard>
       )}
     </div>

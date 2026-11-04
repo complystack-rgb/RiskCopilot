@@ -97,4 +97,4 @@ async def climate(lat, lon):
     annual = sum(x["rain_mm"] for x in monthly)
     return {"monthly": monthly, "annual_rain_mm": annual, "heat_days_per_year": round(heat / 5), "heavy_rain_days_per_year": round(heavy / 5, 1),
             "max_wind_kmh": round(max(wind)) if wind else None, "wettest_months": [w["month"] for w in wet], "hottest_month": max(monthly, key=lambda x: x["tmax_c"] or 0)["month"],
-            "elevation_m": j.get("elevation"), "period": "2021–2025 daily history", "source": "Open-Meteo historical weather (ERA5)"}
+            "elevation_m": j.get("elevation"), "period": "2021 to 2025 daily history", "source": "Open-Meteo historical weather (ERA5)"}

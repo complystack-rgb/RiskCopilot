@@ -8,7 +8,7 @@ export default function Step2Size() {
   const { data, update } = useJourney();
   return (
     <div className="space-y-6">
-      <SectionHeader title="Understand your business size" lead="Workforce, payroll and revenue help frame the potential financial impact of disruption." />
+      <SectionHeader title="Business Size" lead="Your team size and revenue set the right sums insured." />
 
       <div>
         <FieldLabel>How many people work in your business?</FieldLabel>

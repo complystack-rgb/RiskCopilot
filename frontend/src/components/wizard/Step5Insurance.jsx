@@ -13,7 +13,7 @@ export default function Step5Insurance() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader title="Understand your existing insurance" lead="Anything you tell us here is self-reported and is not treated as verified coverage." />
+      <SectionHeader title="Current Insurance" lead="Tell us about any cover you already have." />
 
       <div>
         <FieldLabel>Does your business currently have commercial insurance?</FieldLabel>
@@ -61,7 +61,7 @@ export default function Step5Insurance() {
         {data.hasClaim === "Yes" && (
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
             <Input data-testid="claim-type" placeholder="Type of incident (optional)" value={data.claimType} onChange={(e) => update({ claimType: e.target.value })} />
-            <div className="sm:col-span-2"><FieldLabel>Claim status</FieldLabel>
+            <div className="sm:col-span-2"><FieldLabel>Claim Status</FieldLabel>
               <Pill options={CLAIM_STATUSES} value={data.claimStatus} onChange={(v) => update({ claimStatus: v })} testidPrefix="claim-status" /></div>
             <Textarea data-testid="claim-notes" className="sm:col-span-2" placeholder="Additional details (optional)" value={data.claimNotes} onChange={(e) => update({ claimNotes: e.target.value })} />
             <p className="sm:col-span-2 text-xs text-slate-500">A previous claim does not automatically mean the business is high risk or ineligible.</p>
@@ -70,7 +70,7 @@ export default function Step5Insurance() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div><FieldLabel>Business ownership structure</FieldLabel>
+        <div><FieldLabel>Business Ownership Structure</FieldLabel>
           <Pill options={OWNERSHIP_STRUCTURES} value={data.ownershipStructure} onChange={(v) => update({ ownershipStructure: v })} testidPrefix="ownership-structure" /></div>
         <div><FieldLabel>How many owners does the business have?</FieldLabel>
           <Pill options={OWNER_COUNTS} value={data.ownerCount} onChange={(v) => update({ ownerCount: v })} testidPrefix="owner-count" /></div>
@@ -89,7 +89,7 @@ export default function Step5Insurance() {
             </div>
             <div>
               <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-700"><Icons.FileText className="h-3.5 w-3.5" /> Documents received</p>
-              <p className="text-slate-600">{data.uploadedPolicies.length ? `${data.uploadedPolicies.length} file(s), preliminary read only` : (mp.insurer ? `Manual entry: ${mp.insurer}` : "None")}</p>
+              <p className="text-slate-600">{data.uploadedPolicies.length ? `${data.uploadedPolicies.length} file(s) uploaded` : (mp.insurer ? `Manual entry: ${mp.insurer}` : "None")}</p>
             </div>
             <div>
               <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-700"><Icons.AlertTriangle className="h-3.5 w-3.5" /> Still needs verification</p>

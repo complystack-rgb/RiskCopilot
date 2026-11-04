@@ -11,7 +11,7 @@ export const Icon = ({ name, className }) => {
 export const SectionHeader = ({ eyebrow, title, lead }) => (
   <div className="space-y-2">
     {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{eyebrow}</p>}
-    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{title}</h2>
+    <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">{title}</h2>
     {lead && <p className="text-base text-slate-600 leading-relaxed max-w-2xl">{lead}</p>}
   </div>
 );
@@ -28,7 +28,7 @@ const _WhyUnused = ({ children, testid }) => {
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
       >
         <span className="flex items-center gap-2 text-sm font-semibold text-blue-800">
-          <Icons.Lightbulb className="h-4 w-4" /> Why this matters
+          <Icons.Lightbulb className="h-4 w-4" />
         </span>
         <Icons.ChevronDown className={`h-4 w-4 text-blue-700 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
@@ -89,7 +89,7 @@ const _RewardUnused = ({ title, children, testid }) => (
   <div data-testid={testid} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
     <div className="mb-3 flex items-center gap-2">
       <Icons.Sparkles className="h-4 w-4 text-amber-500" />
-      <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">{title}</h3>
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
     </div>
     {children}
   </div>

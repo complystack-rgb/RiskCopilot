@@ -34,9 +34,9 @@ export default function StepAddress() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader title="Where is your business?" lead="Search for your address, then drag the pin onto your exact building." />
+      <SectionHeader title="Business Location" lead="Search for your address, then drag the pin onto your exact building." />
       <div className="relative">
-        <FieldLabel required>Business address</FieldLabel>
+        <FieldLabel required>Business Address</FieldLabel>
         <div className="relative"><Icons.Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input data-testid="address-search" value={q} onFocus={() => setOpen(true)} onChange={(e) => { setQ(e.target.value); setOpen(true); }} placeholder="Start typing your street, area or industrial estate" className="h-11 pl-9" /></div>
         {open && results.length > 0 && (

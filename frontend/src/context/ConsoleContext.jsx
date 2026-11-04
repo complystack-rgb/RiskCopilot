@@ -20,7 +20,7 @@ export const ConsoleProvider = ({ children }) => {
   const persona = personas.find((p) => p.id === personaId) || personas.find((p) => p.role === "admin") || personas[0];
   const setMarket = (m) => { setMarketRaw(m); const admin = meta?.agents.find((a) => a.market === m && a.role === "admin"); if (admin) setPersonaId(admin.id); };
   const scope = !persona ? { market } : persona.role === "admin" ? { market, org_id: persona.org_id } : { market, agent_id: persona.id };
-  const orgName = (id) => meta?.orgs.find((o) => o.id === id)?.name || "—";
+  const orgName = (id) => meta?.orgs.find((o) => o.id === id)?.name || "N/A";
   const agentName = (id) => meta?.agents.find((a) => a.id === id)?.name || "Unassigned";
   const m = meta?.markets[market];
   const money = (n) => fmt(n, market);

@@ -12,10 +12,10 @@ export default function Step1Identity() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader title="Tell us about your business" lead="A few basics so we can tailor cover to the way you work." />
+      <SectionHeader title="Your Business" lead="Start with the basics." />
 
       <div>
-        <FieldLabel required>Business name</FieldLabel>
+        <FieldLabel required>Business Name</FieldLabel>
         <Input data-testid="business-name-input" placeholder="e.g. Sharma Textiles Pvt Ltd" value={data.businessName}
           onChange={(e) => update({ businessName: e.target.value })} className="max-w-md" />
       </div>
@@ -32,7 +32,7 @@ export default function Step1Identity() {
 
       {data.category && (
         <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-          <FieldLabel>Specific business activity</FieldLabel>
+          <FieldLabel>Specific Business Activity</FieldLabel>
           <Select value={data.activity} onValueChange={(v) => update({ activity: v })}>
             <SelectTrigger data-testid="activity-select" className="max-w-md"><SelectValue placeholder="Select your activity" /></SelectTrigger>
             <SelectContent>{subs.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>

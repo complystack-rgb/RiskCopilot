@@ -23,7 +23,7 @@ export const CAT_HEX = { property: "#0A1F44", bi: "#2563EB", machinery: "#0891B2
 
 const fix = (n, d) => (Math.round(n * 10 ** d) / 10 ** d).toLocaleString("en", { maximumFractionDigits: d });
 export const money = (n, market = "IN") => {
-  if (n == null) return "—";
+  if (n == null) return "N/A";
   const a = Math.abs(n), s = n < 0 ? "-" : "";
   if (market === "IN") return a >= 1e7 ? `${s}₹${fix(a / 1e7, 2)} Cr` : a >= 1e5 ? `${s}₹${fix(a / 1e5, 1)} L` : `${s}₹${Math.round(a).toLocaleString("en-IN")}`;
   if (market === "MY") return a >= 1e6 ? `${s}RM ${fix(a / 1e6, 2)}M` : a >= 1e3 ? `${s}RM ${fix(a / 1e3, 0)}K` : `${s}RM ${Math.round(a)}`;
@@ -38,7 +38,7 @@ export const ago = (iso) => {
 };
 
 export const slaInfo = (c) => {
-  if (["bound", "lost", "quoted", "proposal_submitted"].includes(c.status)) return { text: "—", cls: "text-slate-300" };
+  if (["bound", "lost", "quoted", "proposal_submitted"].includes(c.status)) return { text: "N/A", cls: "text-slate-300" };
   const h = Math.round((new Date(c.sla_due).getTime() - Date.now()) / 3600000);
   if (h < 0) return { text: `Breached ${-h}h`, cls: "text-rose-600 font-semibold" };
   return { text: `${h}h left`, cls: h < 12 ? "text-amber-600 font-semibold" : "text-slate-600" };

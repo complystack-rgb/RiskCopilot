@@ -19,7 +19,7 @@ export const ScoreRing = ({ score, band, size = 120, label = "Fire score" }) => 
           strokeDasharray={c} strokeDashoffset={c * (1 - score / 100)} style={{ transition: "stroke-dashoffset 900ms ease" }} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-mono text-3xl font-bold text-slate-900">{score}</span>
+        <span className="font-mono text-3xl font-semibold text-slate-900">{score}</span>
         <span className="text-[10px] uppercase tracking-wider text-slate-400">{label}</span>
       </div>
     </div>
@@ -44,7 +44,7 @@ export const Kpi = ({ label, value, sub, icon: Icon, tone = "text-slate-900", te
       <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">{label}</p>
       {Icon && <Icon className="h-4 w-4 text-slate-400" />}
     </div>
-    <p className={`mt-2 font-mono text-2xl font-bold ${tone}`}>{value}</p>
+    <p className={`mt-2 font-mono text-2xl font-semibold ${tone}`}>{value}</p>
     {sub && <p className="mt-0.5 text-xs text-slate-500">{sub}</p>}
   </div>
 );
@@ -53,7 +53,7 @@ export const PageHead = ({ eyebrow, title, sub, right }) => (
   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
     <div>
       {eyebrow && <p className="text-[11px] font-semibold uppercase tracking-wider text-blue-700">{eyebrow}</p>}
-      <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
+      <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
       {sub && <p className="mt-1 text-sm text-slate-500">{sub}</p>}
     </div>
     {right}

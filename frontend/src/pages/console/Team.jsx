@@ -61,7 +61,7 @@ export default function Team() {
               {rows.map((a) => (
                 <tr key={a.id} data-testid={`team-row-${a.id}`} className={a.active ? "" : "opacity-50"}>
                   <td className="px-5 py-3"><p className="font-semibold text-slate-900">{a.name}</p><p className="text-[11px] text-slate-500">{a.email}</p></td>
-                  <td className="px-5 py-3">{a.role === "admin" ? <span className="rounded bg-[#0A1F44] px-1.5 py-0.5 text-[10px] font-bold text-white">ADMIN</span> : "Field agent"}</td>
+                  <td className="px-5 py-3">{a.role === "admin" ? <span className="rounded bg-[#0A1F44] px-1.5 py-0.5 text-[10px] font-semibold text-white">ADMIN</span> : "Field agent"}</td>
                   <td className="px-5 py-3">{a.city}</td>
                   <td className="px-5 py-3 font-mono font-semibold">{a.open_cases}</td>
                   <td className="px-5 py-3 font-mono">{a.bound}</td>

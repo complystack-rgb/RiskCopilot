@@ -10,7 +10,7 @@ import { Panel, StatusBadge } from "@/components/console/ui";
 const Kpi = ({ label, value, sub, icon: I, tone, testid, accent }) => (
   <div data-testid={testid} className={`rounded-xl border p-4 shadow-sm ${accent ? "border-[#0A1F44] bg-[#0A1F44] text-white" : "border-slate-200 bg-white"}`}>
     <div className="flex items-center justify-between"><p className={`text-[11px] font-medium uppercase tracking-wider ${accent ? "text-blue-200" : "text-slate-500"}`}>{label}</p><I className={`h-4 w-4 ${accent ? "text-blue-300" : "text-slate-400"}`} /></div>
-    <p className={`mt-2 font-mono text-2xl font-bold tracking-tight ${tone || ""}`}>{value}</p>
+    <p className={`mt-2 font-mono text-2xl font-semibold tracking-tight ${tone || ""}`}>{value}</p>
     {sub && <p className={`mt-0.5 text-xs ${accent ? "text-blue-100/80" : "text-slate-500"}`}>{sub}</p>}
   </div>
 );
@@ -44,7 +44,7 @@ export default function Overview() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-blue-700">{m.name} · {persona?.title}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">Good to see you, {persona?.name.split(" ")[0]}</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Good to see you, {persona?.name.split(" ")[0]}</h1>
           <p className="mt-1 text-sm text-slate-500">Your book has <b className="text-slate-900">{money(k.open_gap)}</b> of open protection gaps across {k.active} active assessments. {s.attention.length} cases need you today.</p>
         </div>
         <div className="flex gap-2"><span className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600"><Icons.Calendar className="mr-1.5 inline h-3.5 w-3.5" />Last 6 months</span>
@@ -85,7 +85,7 @@ export default function Overview() {
         </Panel>
       </div>
 
-      <Panel title="Portfolio insights" icon={Icons.Sparkles}><Insights items={s.insights} money={money} /></Panel>
+      <Panel title="Where to act next" icon={Icons.Target}><Insights items={s.insights} money={money} /></Panel>
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Panel title="Protection gap by cover category" icon={Icons.BarChart3} className="xl:col-span-2" testid="gap-by-category">
@@ -107,7 +107,7 @@ export default function Overview() {
           <div className="space-y-2.5">{pipe.map((p) => (
             <Link key={p.status} to={`/console/cases?status=${p.status}`} className="grid grid-cols-[120px_1fr_70px] items-center gap-3 text-xs hover:opacity-80">
               <span className="truncate text-slate-600">{STATUS_META[p.status].label}</span>
-              <div className="h-5 rounded bg-slate-100"><div className="flex h-full items-center justify-end rounded bg-[#2563EB] pr-1.5 font-mono text-[10px] font-bold text-white" style={{ width: `${Math.max(8, (p.count / maxPipe) * 100)}%` }}>{p.count}</div></div>
+              <div className="h-5 rounded bg-slate-100"><div className="flex h-full items-center justify-end rounded bg-[#2563EB] pr-1.5 font-mono text-[10px] font-semibold text-white" style={{ width: `${Math.max(8, (p.count / maxPipe) * 100)}%` }}>{p.count}</div></div>
               <span className="text-right font-mono text-slate-700">{money(p.value)}</span>
             </Link>))}</div>
         </Panel>

@@ -23,7 +23,7 @@ export default function Step4Premises() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader title="Understand your premises and operations" lead="A clear picture of where and how you operate helps identify what may need protecting." />
+      <SectionHeader title="Premises and Operations" lead="Tell us how and where you operate." />
 
       <div>
         <FieldLabel>Do you own or rent your business premises?</FieldLabel>
@@ -60,13 +60,13 @@ export default function Step4Premises() {
       <div className="space-y-4">
         <p className="text-sm font-semibold text-slate-800">Optional operational details</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><FieldLabel>Main activities at the premises</FieldLabel>
+          <div><FieldLabel>Main Activities at the Premises</FieldLabel>
             <Input data-testid="main-activities" value={data.mainActivities} onChange={(e) => update({ mainActivities: e.target.value })} placeholder="Optional" /></div>
-          <div><FieldLabel>Significant machinery or equipment</FieldLabel>
+          <div><FieldLabel>Significant Machinery or Equipment</FieldLabel>
             <Input data-testid="significant-machinery" value={data.significantMachinery} onChange={(e) => update({ significantMachinery: e.target.value })} placeholder="Optional" /></div>
-          <div><FieldLabel>Stock stored on-site</FieldLabel>
+          <div><FieldLabel>Stock Stored on Site</FieldLabel>
             <Input data-testid="stock-onsite" value={data.stockOnSite} onChange={(e) => update({ stockOnSite: e.target.value })} placeholder="Optional" /></div>
-          <div><FieldLabel>Known fire-protection arrangements</FieldLabel>
+          <div><FieldLabel>Fire Protection Arrangements</FieldLabel>
             <Pill options={safety} value={data.fireProtection} onChange={(v) => update({ fireProtection: v })} testidPrefix="fire-protection" /></div>
         </div>
         <p className="text-xs text-slate-500">For safety details we offer "Not sure", a missing or uncertain answer is never treated as proof a safety measure is absent.</p>

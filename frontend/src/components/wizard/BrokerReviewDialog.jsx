@@ -35,7 +35,7 @@ export const BrokerReviewDialog = ({ open, onOpenChange, data, engine }) => {
         {result ? (
           <div className="text-center" data-testid="broker-review-success">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><Icons.CheckCircle2 className="h-6 w-6" /></span>
-            <h3 className="mt-4 text-lg font-bold text-slate-900">Your report has been submitted</h3>
+            <h3 className="mt-4 text-lg font-semibold text-slate-900">Your report has been submitted</h3>
             <p className="mt-1 text-sm text-slate-500">An ABC Insure partner will contact you within 48 hours. They already have your report, so you won't need to repeat anything.</p>
             <dl className="mt-5 grid grid-cols-2 gap-2 text-left text-xs">
               {[["Reference", result.lead_id], ["Assigned partner", result.distributor], ["Your advisor", result.agent || "Being assigned"], ["Call back by", new Date(result.sla_due).toLocaleDateString("en-IN", { day: "numeric", month: "short" })]].map(([k, v]) => (

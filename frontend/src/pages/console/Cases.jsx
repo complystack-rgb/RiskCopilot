@@ -48,7 +48,7 @@ export default function Cases() {
             {rows?.length === 0 && <tr><td colSpan={9} className="px-4 py-10 text-center text-sm text-slate-500">No cases match these filters.</td></tr>}
             {rows?.map((c) => { const s = slaInfo(c); return (
               <tr key={c.id} data-testid={`case-row-${c.lead_id}`} onClick={() => nav(`/console/cases/${c.id}`)} className="cursor-pointer transition-colors hover:bg-blue-50/40">
-                <td className="px-4 py-3"><p className="font-semibold text-slate-900">{c.sme.business_name}{c.source === "sme_journey" && <span className="ml-1.5 rounded bg-blue-600 px-1 py-px text-[9px] font-bold text-white">NEW</span>}</p><p className="font-mono text-[10px] text-slate-400">{c.lead_id} · {c.sme.city}</p></td>
+                <td className="px-4 py-3"><p className="font-semibold text-slate-900">{c.sme.business_name}{c.source === "sme_journey" && <span className="ml-1.5 rounded bg-blue-600 px-1 py-px text-[9px] font-semibold text-white">NEW</span>}</p><p className="font-mono text-[10px] text-slate-400">{c.lead_id} · {c.sme.city}</p></td>
                 <td className="px-4 py-3 text-slate-600">{c.sme.industry}</td>
                 <td className="px-4 py-3"><BandBadge band={c.assessment.risk_band}>{c.assessment.risk_score} · {c.assessment.risk_band}</BandBadge></td>
                 <td className="px-4 py-3 font-mono font-semibold text-slate-900">{money(c.assessment.protection_gap)}</td>

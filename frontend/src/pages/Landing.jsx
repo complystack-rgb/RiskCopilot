@@ -1,59 +1,96 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { BrandBar } from "@/components/BrandBar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useJourney } from "@/context/JourneyContext";
 
-const COVERS = [["Building2", "Property & fire", "Buildings, machinery and stock against fire and natural perils."], ["TrendingDown", "Business interruption", "Keeps income flowing while you rebuild after a loss."],
-  ["Cog", "Machinery breakdown", "Repairs and replacement for critical equipment."], ["Ship", "Marine & transit", "Goods on the road, at sea and in storage."],
-  ["Users", "Liability", "Claims from customers, visitors and the public."], ["ShieldCheck", "Cyber", "Data breaches, fraud and system outages."]];
-const TRUST = [["Timer", "Report in minutes", "Answer a few questions and see your protection needs straight away."], ["BadgeCheck", "Advice from licensed partners", "A local partner reviews your report and confirms your quote."], ["Wallet", "Pay only for what you need", "Cover matched to your sector, size and assets."]];
+const COVERS = [["Building2", "Fire & Property", "Buildings, machinery and stock", "manufacturing"], ["TrendingDown", "Business Interruption", "Lost income after a loss", "manufacturing"],
+  ["Cog", "Machinery Breakdown", "Critical plant and equipment", "manufacturing"], ["Ship", "Marine & Transit", "Goods on the move", "wholesale"],
+  ["Users", "Public Liability", "Customer and visitor claims", "retail"], ["ShieldCheck", "Cyber", "Data breach and fraud", "it"],
+  ["Store", "Shop Insurance", "Retail stock and fittings", "retail"], ["Truck", "Commercial Vehicle", "Fleet of 2 to 20 vehicles", "transport"]];
+const STEPS = [["ClipboardList", "Tell us about your business", "Sector, size, location and what you already have."], ["FileBarChart", "Get your Protection Report", "See the risks that apply to you, the gaps in your cover and indicative prices."], ["PhoneCall", "Talk to a licensed partner", "A local partner reviews your report and confirms a firm quote."]];
+const WHY = [["BadgeCheck", "Licensed partners near you", "Every quote is reviewed by an authorised local broker."], ["Scale", "Cover matched to real exposure", "We compare what you own with what you have insured."], ["Clock", "Claims support when it counts", "One point of contact from first notice to settlement."], ["Lock", "Your data stays private", "Only your assigned partner and ABC Insure see your details."]];
+const SECTORS = ["Textiles & garments", "Food processing", "Auto components", "Pharmaceuticals", "Warehousing", "Retail shops", "IT services", "Hospitality"];
+const FAQ = [["Who is this for?", "Owners of small and medium businesses in India who want business insurance and are not sure what they need."],
+  ["Is the price final?", "Prices in your report are indicative. Your partner confirms the final premium after reviewing your details."],
+  ["Do I need documents to start?", "No. Photos and policy documents are optional and can be shared with your partner later."],
+  ["What happens after I submit?", "Your report goes to a licensed partner, who contacts you within 48 hours."]];
+
+const I = (n) => Icons[n];
 
 export default function Landing() {
   const nav = useNavigate();
-  const { reset } = useJourney();
-  const go = () => { reset(); nav("/quote"); };
-  const I = (n) => Icons[n];
+  const { reset, update } = useJourney();
+  const [name, setName] = useState("");
+  const go = (category) => { reset(); if (name) update({ businessName: name }); if (category) update({ category }); nav("/quote"); };
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white text-slate-900">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3.5 sm:px-6 lg:px-8">
           <BrandBar />
-          <div className="flex items-center gap-2">
-            <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex"><a href="#cover" className="hover:text-slate-900">Business cover</a><a href="#why" className="hover:text-slate-900">Why ABC Insure</a><a href="/console" data-testid="partner-console-link" className="hover:text-slate-900">Partner login</a></nav>
-            <Button data-testid="header-quote-btn" onClick={go} className="ml-4 bg-[#0A1F44] hover:bg-[#13306a]">Get a quote online</Button>
+          <div className="flex items-center gap-6">
+            <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex"><a href="#cover" className="hover:text-slate-900">Business Insurance</a><a href="#how" className="hover:text-slate-900">How It Works</a><a href="#faq" className="hover:text-slate-900">FAQs</a><a href="/console" data-testid="partner-console-link" className="hover:text-slate-900">Partner Login</a></nav>
+            <Button data-testid="header-quote-btn" onClick={() => go()} className="bg-[#0A1F44] hover:bg-[#13306a]">Get a quote online</Button>
           </div>
         </div>
       </header>
-      <section className="relative overflow-hidden bg-[#0A1F44]">
-        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)", backgroundSize: "28px 28px" }} />
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-28">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-100"><Icons.Building2 className="h-3.5 w-3.5" /> Business insurance for SMEs</p>
-            <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">Know exactly what your business needs to be protected.</h1>
-            <p className="mt-5 max-w-xl text-lg text-blue-100">Tell us how you work. In a few minutes you get a clear protection report, recommended cover and indicative prices, then a licensed partner takes it from there.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Button data-testid="hero-quote-btn" size="lg" onClick={go} className="h-12 bg-blue-500 px-6 text-base hover:bg-blue-400">Get a quote online <Icons.ArrowRight className="ml-2 h-4 w-4" /></Button>
-              <a href="#cover" className="inline-flex h-12 items-center rounded-md border border-white/25 px-6 text-sm font-medium text-white hover:bg-white/10">Explore cover</a></div>
+
+      <section className="bg-gradient-to-b from-blue-50/70 to-white">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:px-8 lg:py-20">
+          <div className="self-center">
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">Business insurance, <span className="text-blue-600">matched to what you actually own.</span></h1>
+            <p className="mt-5 max-w-lg text-lg text-slate-600">Answer a few questions about your business and get a clear Protection Report with recommended cover and indicative prices.</p>
+            <div className="mt-8 flex max-w-lg flex-col gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:flex-row">
+              <Input data-testid="hero-business-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your business name" className="h-12 border-0 text-base shadow-none focus-visible:ring-0" />
+              <Button data-testid="hero-quote-btn" size="lg" onClick={() => go()} className="h-12 shrink-0 bg-blue-600 px-6 hover:bg-blue-700">Get a quote online <Icons.ArrowRight className="ml-2 h-4 w-4" /></Button>
+            </div>
+            <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500"><Icons.ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />No paperwork to start. No obligation.</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 self-center">
-            {[["10 min", "to your protection report"], ["6", "cover categories"], ["48 h", "partner response"], ["4.8/5", "customer rating"]].map(([v, l]) => (
-              <div key={l} className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><p className="font-mono text-3xl font-bold text-white">{v}</p><p className="mt-1 text-sm text-blue-100">{l}</p></div>))}
+          <div id="cover" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <p className="text-sm font-semibold">Choose the cover you are looking for</p>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {COVERS.map(([ic, t, d, cat]) => { const C = I(ic); return (
+                <button key={t} data-testid={`cover-tile-${t.toLowerCase().replace(/[^a-z]+/g, "-")}`} onClick={() => go(cat)}
+                  className="group flex flex-col items-center gap-2 rounded-xl border border-slate-200 p-4 text-center transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-700 transition-colors group-hover:bg-blue-600 group-hover:text-white"><C className="h-5 w-5" /></span>
+                  <span className="text-sm font-semibold leading-tight">{t}</span><span className="text-[11px] leading-snug text-slate-500">{d}</span>
+                </button>); })}
+            </div>
+            <button onClick={() => go()} className="mt-4 flex w-full items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-left text-sm transition-colors hover:bg-blue-50" data-testid="not-sure-btn">
+              <span><span className="font-semibold">Not sure what you need?</span> <span className="text-slate-500">We will work it out with you.</span></span><Icons.ChevronRight className="h-4 w-4 text-blue-600" /></button>
           </div>
         </div>
       </section>
-      <section id="cover" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Business cover</p><h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Cover for every part of your business</h2>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{COVERS.map(([ic, t, d]) => { const C = I(ic); return (
-          <div key={t} data-testid={`cover-category-${t.toLowerCase().replace(/[^a-z]+/g, "-")}`} className="group rounded-2xl border border-slate-200 p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700 transition-colors group-hover:bg-[#0A1F44] group-hover:text-white"><C className="h-5 w-5" /></span>
-            <p className="mt-4 text-lg font-semibold text-slate-900">{t}</p><p className="mt-1 text-sm text-slate-500">{d}</p></div>); })}</div>
+
+      <section className="border-y border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 py-5 text-sm text-slate-500 sm:px-6 lg:px-8">
+        <span className="font-semibold text-slate-700">Built for</span>{SECTORS.map((s) => <span key={s}>{s}</span>)}</div></section>
+
+      <section id="how" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-semibold tracking-tight">How it works</h2>
+        <div className="mt-10 grid gap-6 md:grid-cols-3">{STEPS.map(([ic, t, d], i) => { const C = I(ic); return (
+          <div key={t} className="relative rounded-2xl border border-slate-200 p-6"><span className="absolute right-5 top-5 font-mono text-sm text-slate-300">0{i + 1}</span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0A1F44] text-white"><C className="h-5 w-5" /></span><p className="mt-4 text-lg font-semibold">{t}</p><p className="mt-1 text-sm text-slate-600">{d}</p></div>); })}</div>
       </section>
-      <section id="why" className="border-y border-slate-200 bg-slate-50">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">{TRUST.map(([ic, t, d]) => { const C = I(ic); return (
-          <div key={t} className="flex gap-4"><C className="h-6 w-6 shrink-0 text-blue-700" /><div><p className="font-semibold text-slate-900">{t}</p><p className="mt-1 text-sm text-slate-500">{d}</p></div></div>); })}</div>
+
+      <section className="bg-[#0A1F44]"><div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-semibold tracking-tight text-white">Why businesses choose ABC Insure</h2>
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{WHY.map(([ic, t, d]) => { const C = I(ic); return (
+          <div key={t}><C className="h-6 w-6 text-blue-300" /><p className="mt-3 font-semibold text-white">{t}</p><p className="mt-1 text-sm text-blue-100/80">{d}</p></div>); })}</div>
+      </div></section>
+
+      <section id="faq" className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
+        <h2 className="text-3xl font-semibold tracking-tight">Frequently asked questions</h2>
+        <Accordion type="single" collapsible className="mt-6">{FAQ.map(([q, a], i) => (
+          <AccordionItem key={q} value={`f${i}`}><AccordionTrigger data-testid={`faq-${i}`} className="text-left text-base font-semibold">{q}</AccordionTrigger><AccordionContent className="text-slate-600">{a}</AccordionContent></AccordionItem>))}</Accordion>
+        <div className="mt-12 rounded-2xl bg-blue-50 p-8 text-center"><p className="text-xl font-semibold">See your Protection Report today</p><Button data-testid="footer-quote-btn" size="lg" onClick={() => go()} className="mt-4 bg-[#0A1F44] hover:bg-[#13306a]">Get a quote online</Button></div>
       </section>
-      <section className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8"><h2 className="text-3xl font-bold tracking-tight text-slate-900">See your protection report today</h2><p className="mt-2 text-slate-500">No paperwork to start. No obligation.</p><Button data-testid="footer-quote-btn" size="lg" onClick={go} className="mt-6 h-12 bg-[#0A1F44] px-8 hover:bg-[#13306a]">Get a quote online</Button></section>
-      <footer className="bg-[#0A1F44]"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-xs text-blue-100/70 sm:flex-row sm:justify-between sm:px-6 lg:px-8"><span>© 2026 ABC Insure. Insurance is the subject matter of solicitation.</span><span>Indicative prices are subject to underwriting review.</span></div></footer>
+
+      <footer className="border-t border-slate-200 bg-slate-50"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <BrandBar compact /><span>© 2026 ABC Insure. Insurance is the subject matter of solicitation. Indicative prices are subject to review.</span></div></footer>
     </div>
   );
 }

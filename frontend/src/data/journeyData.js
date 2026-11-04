@@ -48,16 +48,16 @@ export const INDIAN_STATES = [
   "Chandigarh", "Andaman and Nicobar Islands",
 ];
 
-export const HEADCOUNT_OPTIONS = ["Just me", "2–5", "6–10", "11–20", "21–50", "51–100", "More than 100", "Not sure"];
+export const HEADCOUNT_OPTIONS = ["Just me", "2 to 5", "6 to 10", "11 to 20", "21 to 50", "51 to 100", "More than 100", "Not sure"];
 
 export const PAYROLL_BANDS = [
-  "No employees / no payroll", "Below ₹5 lakh", "₹5–15 lakh", "₹15–50 lakh",
-  "₹50 lakh–₹1 crore", "₹1–5 crore", "Above ₹5 crore", "Not sure",
+  "No employees / no payroll", "Below ₹5 lakh", "₹5 to 15 lakh", "₹15 to 50 lakh",
+  "₹50 lakh to ₹1 crore", "₹1 to 5 crore", "Above ₹5 crore", "Not sure",
 ];
 
-// Note: "Below ₹10 lakh" and "₹10–50 lakh" removed per requirement.
+// Note: "Below ₹10 lakh" and "₹10 to 50 lakh" removed per requirement.
 export const REVENUE_BANDS = [
-  "₹50 lakh–₹1 crore", "₹1–5 crore", "₹5–25 crore", "₹25–50 crore", "Above ₹50 crore", "Not sure",
+  "₹50 lakh to ₹1 crore", "₹1 to 5 crore", "₹5 to 25 crore", "₹25 to 50 crore", "Above ₹50 crore", "Not sure",
 ];
 
 export const PRIORITIES = [
