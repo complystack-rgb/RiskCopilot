@@ -58,7 +58,7 @@ export const OptionCard = ({ title, desc, iconName, selected, onClick, testid, c
           <Icon name={iconName} className="h-4 w-4" />
         </span>
       )}
-      <div className="min-w-0">
+      <div className="min-w-0 break-words">
         <p className={`font-semibold ${compact ? "text-sm" : "text-[15px]"} ${selected ? "text-blue-900" : "text-slate-800"}`}>{title}</p>
         {desc && <p className="mt-0.5 text-xs text-slate-500 leading-snug">{desc}</p>}
       </div>

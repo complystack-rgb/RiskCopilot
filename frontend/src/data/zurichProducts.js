@@ -57,7 +57,7 @@ export const ZURICH_PRODUCTS = [
   {
     id: "small-fleet",
     name: "Small Fleet",
-    tagline: "For businesses running a fleet of 2–20 vehicles, on CCE and/or NCD basis.",
+    tagline: "Motor cover for businesses running 2 to 20 commercial vehicles under one policy.",
     icon: "Truck",
     industries: ["transport", "construction", "wholesale", "manufacturing", "agriculture", "repair"],
     priorities: ["vehicles"],
@@ -107,7 +107,7 @@ export const ZURICH_PRODUCTS = [
   {
     id: "executive-risk",
     name: "Executive Risk Solutions",
-    tagline: "Management liability (D&O) for UK-equivalent companies up to ₹1,700 crore turnover.",
+    tagline: "Directors and officers liability for private companies up to ₹1,700 crore turnover.",
     icon: "UserCog",
     industries: ["professional", "it", "manufacturing", "healthcare", "realestate", "trading"],
     priorities: ["continuity", "thirdparty"],

@@ -234,7 +234,15 @@ async def create_case(body: SmeSubmit):
     hero = list(next(h for h in HEROES if h[0] == key))
     hero[2] = REGION.get(j.get("state"), "org-bharat")
     hero[3], hero[4], hero[5] = j["businessName"], j.get("city") or hero[4], j.get("state") or hero[5]
-    hero[6] = j.get("activity") or hero[6]
+    hero[6] = j.get("activity") or {"manufacturing": "Manufacturing", "retail": "Retail", "wholesale": "Wholesale and distribution", "it": "IT services", "hospitality": "Hospitality and food services",
+                                    "healthcare": "Healthcare", "transport": "Transport and logistics"}.get(j.get("category"), (j.get("category") or hero[6]).title())
+    hc = re.findall(r"\d+", j.get("headcount") or "")
+    if hc:
+        hero[7] = max(1, round(sum(map(int, hc)) / len(hc))) if len(hc) <= 2 else hero[7]
+    elif j.get("headcount") == "Just me":
+        hero[7] = 1
+    if j.get("headcount") == "More than 100":
+        hero[7] = 140
     hero[13] = "new"
     if j.get("hasInsurance") != "Yes":
         hero[12] = None

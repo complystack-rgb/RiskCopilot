@@ -41,9 +41,9 @@ const Sandbox = () => {
   const [res, setRes] = useState(null);
   const [comment, setComment] = useState("Quote issued at indicative terms.");
   const [busy, setBusy] = useState(false);
-  const call = async (fn) => { setBusy(true); try { const { data } = await fn(); setRes({ ok: true, data }); } catch (e) { setRes({ ok: false, data: { detail: errMsg(e) } }); toast.error(errMsg(e)); } finally { setBusy(false); } };
+  const call = async (fn) => { setBusy(true); try { const { data } = await fn(); setRes({ ok: true, data }); return true; } catch (e) { setRes({ ok: false, data: { detail: errMsg(e) } }); toast.error(errMsg(e)); return false; } finally { setBusy(false); } };
   const get = () => call(() => api.get(`/developer/leads/${lead}`));
-  const decide = (decision) => call(() => api.post(`/developer/leads/${lead}/decision`, { decision, comment })).then(() => toast.success("Decision sent. Open the case to see it on the broker side."));
+  const decide = async (decision) => { if (await call(() => api.post(`/developer/leads/${lead}/decision`, { decision, comment }))) toast.success("Decision sent. Open the case to see it on the broker side."); };
   return (
     <div className="grid gap-6 lg:grid-cols-5">
       <div className="space-y-6 lg:col-span-2">
@@ -62,7 +62,7 @@ const Sandbox = () => {
         </Panel>
       </div>
       <Panel title="Response" icon={Icons.Braces} className="lg:col-span-3" action={res && <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${res.ok ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{res.ok ? "200 OK" : "ERROR"}</span>}>
-        <pre data-testid="dev-response" className="max-h-[640px] overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-[11px] leading-relaxed text-emerald-300">{res ? JSON.stringify(res.data, null, 2) : "// Send a request to see the JSON response"}</pre>
+        <pre data-testid="dev-response" className={`max-h-[640px] overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-[11px] leading-relaxed ${res && !res.ok ? "text-rose-300" : "text-emerald-300"}`}>{res ? JSON.stringify(res.data, null, 2) : "// Send a request to see the JSON response"}</pre>
       </Panel>
     </div>
   );

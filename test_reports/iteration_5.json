@@ -1,0 +1,49 @@
+{
+  "summary": "Iteration 5 (full rebuild, ABC Insure white-label). Backend: new pytest suite /app/backend/tests/test_iter5_platform.py with 18 tests, all passing. Covered: stats for IN/MY/ID, meta, cases per market plus status/band/q filters (q='(' now returns 200), POST /cases validation (422) and create->GET, status transitions (400 on invalid), proposal (400 before visit or with an invalid product), notes, checklist, partner API key (401 without or with a wrong key), v1 list by market, decision (400 for a bad decision or a blank request_info comment, 409 when not proposal_submitted), request_info -> resubmit -> sandbox approve -> quoted, seeded proposal_submitted leads (ZIN-26002, ZMY-26001, ZID-26003), geo search/climate/surroundings, team add/duplicate/patch/404. Frontend (Playwright, 1920x1080): these flows passed: landing CTAs go to /quote; no Zurich text on /, /quote, report or console; step 1 and step 2 gating; live address suggestions (6) set the coords; no back button; 7 steps -> report-loading -> protection-report with 6 cover cards in 2 columns, exposure-profile, insights and a social-proof block labelled sample; submit-review dialog (phone validation) -> ZIN-26024 success; NEW badge in Cases; Overview has all 10 KPIs and 8 panels in each market, with the correct currency (₹ Cr, RM M/K, Rp T/M) and the persona list scoped to the market; case filters; case detail on all 8 tabs (checklist persists after reload, F1 jumps to evidence, annotation-P2-0 plate fields, P1-P3 thumbs, 5 video frames, live climate chart, live OSM surroundings, map toggle); full broker workflow contacted -> visit_scheduled -> visited -> proposal with live advisory checks -> Proposal submitted; note added to the audit trail; dev portal shows 3 endpoints, lookup works, approve -> quoted, and insurer-decision shows on the Proposal tab; Team add, toggle persists, duplicate-email toast; Team nav hidden for agent personas. No JS page errors. Found 1 functional bug in the sandbox toast, plus an access-guard gap, data-fidelity issues on SME-created cases and mobile layout issues.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/cases", "issue": "The case ignores most of what the SME entered. Industry, employees, revenue, photos and machinery come from a hero template. The SME picked Manufacturing with no activity, and the case shows 'Auto components · 120 employees' plus CNC photos, even though no photos were uploaded. Template mapping is keyword-only on activity/category (defaults to in3). Industry should at least come from the journey category/activity, and headcount from the journey."},
+      {"endpoint": "POST /api/cases", "issue": "Only the India market is supported (counter lead-IN, hero in*). There is no market field, so MY/ID SMEs cannot submit. Acceptable if this is intended."},
+      {"endpoint": "GET /api/console/stats, /api/cases", "issue": "market is not validated. An unknown market (e.g. XX) returns 200 with empty data instead of 400."},
+      {"endpoint": "Cleanup", "issue": "There is no DELETE endpoint for cases or agents, so test runs cannot clean up after themselves except with reset-demo."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "DeveloperPortal Sandbox decide()", "issue": "The success toast 'Decision sent...' fires even when the API errors (409, or 400 for a blank request_info comment). The user sees an error toast and a success toast together. Cause: call() swallows the error, so the .then(toast.success) still runs. Fix: have call() return a boolean or rethrow, and only toast success when the call succeeds.", "selector": "[data-testid='dev-approve'], [data-testid='dev-request-info']", "priority": "MEDIUM"},
+      {"component": "Team route guard", "issue": "If you switch the persona to an agent (e.g. Imran) while on /console/team, the team table stays visible and fully usable. The Team page has no admin guard (only the nav link is hidden), so agents can also open it directly by URL. It should redirect or show 'Admins only'.", "selector": "[data-testid='team-table']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Console on mobile (390px)", "issues": ["Sidebar is hidden below md and there is no mobile menu, so Overview, Cases, Team and Developer pages cannot be reached by navigation", "Header overflows (scrollWidth 416): the logo is cut off and the persona card is clipped"]},
+      {"screen": "/quote step 1 on mobile", "issues": ["Category card labels overflow their cards (e.g. 'Manufacturing', 'Trading and import/export', 'Construction and contracting' run past the right edge)"]},
+      {"screen": "Protection report cover cards", "issues": ["Copy left over from the UK catalogue: 'Executive Risk Solutions ... UK-equivalent companies', and 'Small Fleet ... CCE and/or NCD basis'. Localise for India", "data/zurichProducts.js and ZURICH_PRODUCTS identifiers still exist in code (not visible to users). Rename to keep the white-label clean"]},
+      {"screen": "Developer portal response panel", "issues": ["Error JSON is shown in emerald-green text even when the ERROR badge is shown. Use rose for errors"]},
+      {"screen": "Overview", "issues": ["The 'Assessments and bound business' chart panel has a large empty area below the chart because it stretches to the height of Needs attention"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter5_platform.py", "/app/test_reports/pytest/pytest_iter5.xml"],
+  "action_items": [
+    "Fix the DeveloperPortal sandbox so the success toast only shows when the decision call succeeds",
+    "Add an admin guard on the /console/team route (redirect agents)",
+    "POST /api/cases: take industry, employees and revenue from the SME journey instead of the hero template, and don't attach demo photos or machinery to cases with no uploads (or label them clearly as illustrative)",
+    "Add mobile navigation (hamburger or bottom nav) to the console and fix the header overflow; fix the category card text overflow on /quote at 390px",
+    "Localise the UK-specific product copy (Executive Risk 'UK-equivalent', Small Fleet 'CCE/NCD')",
+    "Run POST /api/console/reset-demo yourself to restore demo data. The testing agent did NOT run it, because its data rules forbid reset scripts"
+  ],
+  "critical_code_review_comments": [
+    "server.py create_case: next(a for a in agents if a['id']==c['agent_id']) raises StopIteration (500) if the routed org has no active agents. build_case would also fail if org_agents is empty. Handle this with a fallback or a 409",
+    "server.py: market query param is not validated against MARKETS",
+    "StepAddress.jsx: editing the address text after picking a suggestion keeps the old lat/lon, so the coords can go stale. Also the 'data.lat ?' truthiness check",
+    "DeveloperPortal.jsx: call() swallows errors, which causes the false success toast",
+    "Team page relies on hiding the nav link for access control, with no route-level guard"
+  ],
+  "updated_files": ["/app/backend/tests/test_iter5_platform.py"],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "~92% (all requested flows work; 1 toast bug, 1 access-guard gap, mobile layout issues)"},
+  "seed_data_creation": "Created by testing (not cleaned up, because there is no delete endpoint): cases ZIN-26023 'TEST_Iter5 Weaving' (via API, now quoted) and ZIN-26024 'TEST_UI Weaving Mills' (via UI journey, now quoted, checklist item 0 ticked, TEST_ note added); agents ag-3cd23ded 'TEST_Agent Iter5' and ag-4dd9a936 'TEST_UI Agent' in org-bharat, both deactivated. No seeded case, agent or org was modified. reset-demo was NOT called; the main agent should run it.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "No auth. Partner key X-API-Key: cs_demo_zurich_7f3a91c2. /app/memory/test_credentials.md is outdated (it still says frontend-only/localStorage). Update it.",
+  "context_for_next_testing_agent": "Run pytest with -n 0 (pytest.ini forces xdist; the suite shares state between tests). The suite creates a new IN case and a TEST agent each run (the agent test skips if one already exists). Workflow and decision tests use only TEST-created cases, to avoid mutating seeded leads ZIN-26002/ZMY-26001/ZID-26003. Default persona on IN is Ritika (admin, Bharat Risk Brokers); the case list is scoped to that org (17 cases). The surroundings lookup for ZIN-26001 is cached and fast."
+}

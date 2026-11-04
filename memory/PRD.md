@@ -1,59 +1,28 @@
-# ComplyStack — SME Insurance Discovery Journey (PRD)
+# ComplyStack: SME Protection Journey and Broker Intelligence Platform
 
-## Original problem statement
-Build a polished, interactive 7-step SME onboarding journey that helps business owners
-discover what they may need to protect, identify potential insurance gaps, and find practical
-next steps. The defining principle: help SMEs discover what they may be overlooking — not just
-collect information. India-specific fields and INR bands.
+## Problem statement (summary)
+A white-label insurance platform (demo brand "ABC Insure", Powered by ComplyStack). SMEs complete a short guided journey and get a Protection Report. Brokers and distributors get an analytics-first console with full case reports. Insurer IT and underwriting use the APIs only, so there are no underwriter screens.
 
 ## Architecture
-- **Frontend-only** (current scope, per user choice): Vite + React 19 + Tailwind v4 + shadcn/ui.
-- State: React Context (`JourneyContext`) persisted to `localStorage`. No backend/DB yet.
-- File uploads + "AI analysis": **simulated client-side, clearly labelled as demo** (no LLM).
-- Backend is the untouched template (`/api/` hello world only).
+- Backend FastAPI + MongoDB: `server.py` (routes), `markets.py` (IN/MY/ID config, catalogs, 18 hero cases, image URLs), `engine.py` (exposure, gaps, recommendations, evidence, timelines, advisory checks), `seed.py` (orgs, agents, 18 hero and 48 historical cases), `geo.py` (live Nominatim search, Overpass surroundings, Open-Meteo climate and elevation, cached in `geo_cache`), `cyber_scan.py` (kept for phase 3, no route), `prewarm.py` (warms the geo cache).
+- Frontend React: `/` Landing, `/quote` forward-only journey (7 steps including StepAddress with Leaflet map pin) followed by the Protection Report, `/console` (Overview, Cases, CaseDetail with 8 tabs, Team admin-only, DeveloperPortal).
+- Partner API: `GET /api/v1/leads/{lead_id}`, `GET /api/v1/leads?market=&distributor_id=&agent_id=`, `POST /api/v1/leads/{lead_id}/decision` with header `X-API-Key` (env `CS_PARTNER_API_KEY`). Sandbox: `/api/developer/leads/...`.
 
-## User personas
-- SME business owner, non-insurance-expert, wants clarity without pressure or jargon.
+## Implemented (2026-11)
+- ABC Insure branding everywhere. There are no Zurich names in the UI.
+- Geography switcher with INR, MYR and IDR formatting. The user switcher is scoped by market.
+- Overview: 10 KPIs, needs attention, 6-month trend, insights, gap by category, risk mix, pipeline, industry mix, leaderboard.
+- Case report: Summary, live Location intelligence (street and satellite), live Climate impact, Evidence (54 AI-generated photos with plate fields and video stills), Assets, Coverage, Proposal (with live advisory checks), Activity.
+- Broker workflow: new → contacted → visit_scheduled → visited → proposal_submitted → (insurer decision via API) quoted, info_requested or lost → bound or lost.
+- SME journey runs forward only, with address search and map pin, a loading screen, the Protection Report, and submit for review (email and phone) that creates the case.
+- Mobile bottom nav in the console.
+- Tested in iteration 5: backend 18/18, frontend flows passing. Fixes were applied for the sandbox toast, the Team guard, mobile layout and product copy.
 
-## Core requirements (static)
-- One question group per screen, visible progress stepper, live business summary sidebar.
-- Conditional logic, "Why this matters" explainers, "Not sure"/"later" options everywhere.
-- Preserve answers on back-navigation; never ask the same question twice; no email gate.
-- No points/badges/risk scores. Honest statuses only: Known, Needs verification,
-  Potential limitation, Potential gap. Never label a missing answer a confirmed gap.
-- Premium light SaaS look: white/light-grey, dark text, blue primary, amber attention.
+## Illustrative vs live
+- ILLUSTRATIVE: evidence findings, plate readings, premiums, testimonials, portfolio history, peer stats.
+- LIVE: address search, map surroundings (Overpass via the maps.mail.ru mirror), climate history, elevation.
 
-## Implemented (2026-06, iteration 1) — all verified by testing agent (100% frontend)
-- Step 1 Identity: name, 15 category cards, configurable subcategory dropdown, start year +
-  Not sure, India/state/city/PIN, address + "do later". Business identity card reward.
-- Step 2 Size: headcount, payroll band, revenue band (two lowest bands removed per req),
-  optional exact INR. Live snapshot reward.
-- Step 3 Priorities: 9 multi-select cards, per-priority conditional follow-ups, "I'm not sure"
-  branch with 2 guidance questions. Preliminary priorities summary reward.
-- Step 4 Premises: ownership, location type, add-more-locations, category-specific follow-up,
-  optional operational details with Yes/No/Not sure for safety. Premises summary reward.
-- Step 5 Insurance: has-insurance, 13 cover types multi-select, Option A upload (simulated
-  preliminary read) + Option B manual entry, claims history, ownership structure/owner count.
-  Existing protection summary (provided / documents / needs verification).
-- Step 6 Evidence: optional premises media, machinery photos + asset details, policy docs.
-- Step 7 Summary: business at a glance, status-badged considerations from actual answers,
-  prioritised next action, edit buttons, JSON download, print/PDF.
-- Shared: progress stepper + step tabs, live summary sidebar, Why-this-matters accordions.
-
-## Iteration 2–3 (2026-06)
-- Zurich branding, landing page, client-side risk engine, Zurich product quotes in Step 7.
-- Fixes: products shown only if made for the business's sector; narrative grammar ("an IT");
-  size line names the actual top-2 exposure areas; no repeated top-area line. Verified (iteration_3).
-
-## Iteration 4 (2026-06)
-- Header (landing + journey): real Zurich logo + "Powered by" ComplyStack logo (`components/BrandBar.jsx`, `/public/brand/*.png`).
-- Landing: removed trust cards, product grid and "Explore cover" button.
-
-## Backlog / remaining (prioritised)
-- P1: Connect MongoDB backend to persist journeys server-side (user said "connect DB later").
-- P1: Real policy PDF analysis via an LLM integration (replace simulated read).
-- P2: Emergent Object Storage for real file uploads; PDF export of the summary (vs JSON/print).
-- P2: Auth so each owner has saved journeys; shareable summary link.
-
-## Next tasks
-- Await user review of the journey, then wire DB persistence and/or real analysis.
+## Backlog
+- P1: real login per broker org with access rules; real photo, video and PDF uploads with automatic reading; email or SMS alerts to agents.
+- P1: SME journey for Malaysia and Indonesia (currently India only).
+- P2: webhooks to insurer systems, cover lines configured without code changes, cyber website check module, case and agent delete endpoints, market validation on stats.

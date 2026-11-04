@@ -1,3 +1,4 @@
+import { Navigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import * as Icons from "lucide-react";
 import { toast } from "sonner";
@@ -41,6 +42,7 @@ export default function Team() {
   useEffect(() => { load(); }, [load]);
   const org = meta.orgs.find((o) => o.id === orgId);
   const toggle = async (a) => { await api.patch(`/agents/${a.id}`, { active: !a.active }); toast.success(`${a.name} ${a.active ? "deactivated" : "reactivated"}`); load(); loadMeta(); };
+  if (persona.role !== "admin") return <Navigate to="/console" replace />;
 
   return (
     <div className="space-y-6">
