@@ -1,76 +1,59 @@
-import { BrandBar } from "@/components/BrandBar";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
+import { BrandBar } from "@/components/BrandBar";
 import { Button } from "@/components/ui/button";
-export default function Landing() {
-  const navigate = useNavigate();
-  const go = () => navigate("/quote");
+import { useJourney } from "@/context/JourneyContext";
 
+const COVERS = [["Building2", "Property & fire", "Buildings, machinery and stock against fire and natural perils."], ["TrendingDown", "Business interruption", "Keeps income flowing while you rebuild after a loss."],
+  ["Cog", "Machinery breakdown", "Repairs and replacement for critical equipment."], ["Ship", "Marine & transit", "Goods on the road, at sea and in storage."],
+  ["Users", "Liability", "Claims from customers, visitors and the public."], ["ShieldCheck", "Cyber", "Data breaches, fraud and system outages."]];
+const TRUST = [["Timer", "Report in minutes", "Answer a few questions and see your protection needs straight away."], ["BadgeCheck", "Advice from licensed partners", "A local partner reviews your report and confirms your quote."], ["Wallet", "Pay only for what you need", "Cover matched to your sector, size and assets."]];
+
+export default function Landing() {
+  const nav = useNavigate();
+  const { reset } = useJourney();
+  const go = () => { reset(); nav("/quote"); };
+  const I = (n) => Icons[n];
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 px-3 sm:px-4 sm:px-6 lg:px-8 py-4">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3.5 sm:px-6 lg:px-8">
           <BrandBar />
           <div className="flex items-center gap-2">
-            <a href="/console" data-testid="partner-console-link" className="hidden sm:inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"><Icons.LayoutDashboard className="h-4 w-4" /> Partner console</a>
-            <Button data-testid="header-quote-btn" onClick={go} className="shrink-0 px-3 sm:px-4"><span className="sm:hidden">Get a quote</span><span className="hidden sm:inline">Get a quote online</span> <Icons.ArrowRight className="ml-1.5 hidden sm:inline h-4 w-4" /></Button>
+            <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex"><a href="#cover" className="hover:text-slate-900">Business cover</a><a href="#why" className="hover:text-slate-900">Why ABC Insure</a><a href="/console" data-testid="partner-console-link" className="hover:text-slate-900">Partner login</a></nav>
+            <Button data-testid="header-quote-btn" onClick={go} className="ml-4 bg-[#0A1F44] hover:bg-[#13306a]">Get a quote online</Button>
           </div>
         </div>
       </header>
-
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-[#0A1F44] text-white">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, #2563EB 0, transparent 45%), radial-gradient(circle at 80% 0%, #1D4ED8 0, transparent 40%)" }} />
-        <div className="relative max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <section className="relative overflow-hidden bg-[#0A1F44]">
+        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)", backgroundSize: "28px 28px" }} />
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-28">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
-              <Icons.Sparkles className="h-3.5 w-3.5" /> Insurance for small & medium-sized enterprises
-            </span>
-            <h1 className="mt-5 text-4xl sm:text-5xl font-extrabold leading-[1.05] tracking-tight">
-              Protect everything you've<br />built — in minutes.
-            </h1>
-            <p className="mt-5 max-w-lg text-lg text-blue-100/90 leading-relaxed">
-              Answer a few guided questions and our risk engine shows you where your business may be exposed, which Zurich SME products fit, and an indicative premium — before you ever speak to anyone.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button data-testid="hero-quote-btn" onClick={go} size="lg" className="bg-white text-[#0A1F44] hover:bg-blue-50">
-                Get a quote online <Icons.ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-            <div className="mt-8 flex items-center gap-5 text-sm text-blue-100/80">
-              <span className="flex items-center gap-1.5"><Icons.Check className="h-4 w-4 text-blue-300" /> No login needed</span>
-              <span className="flex items-center gap-1.5"><Icons.Check className="h-4 w-4 text-blue-300" /> No email gate</span>
-              <span className="flex items-center gap-1.5"><Icons.Check className="h-4 w-4 text-blue-300" /> Indicative pricing</span>
-            </div>
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-100"><Icons.Building2 className="h-3.5 w-3.5" /> Business insurance for SMEs</p>
+            <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">Know exactly what your business needs to be protected.</h1>
+            <p className="mt-5 max-w-xl text-lg text-blue-100">Tell us how you work. In a few minutes you get a clear protection report, recommended cover and indicative prices, then a licensed partner takes it from there.</p>
+            <div className="mt-8 flex flex-wrap gap-3"><Button data-testid="hero-quote-btn" size="lg" onClick={go} className="h-12 bg-blue-500 px-6 text-base hover:bg-blue-400">Get a quote online <Icons.ArrowRight className="ml-2 h-4 w-4" /></Button>
+              <a href="#cover" className="inline-flex h-12 items-center rounded-md border border-white/25 px-6 text-sm font-medium text-white hover:bg-white/10">Explore cover</a></div>
           </div>
-          <div className="relative hidden lg:block">
-            <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?crop=entropy&cs=srgb&fm=jpg&w=900&q=80" alt="SME team at work"
-              className="rounded-2xl border border-white/10 shadow-2xl" />
-            <div className="absolute -bottom-5 -left-5 rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Indicative quote</p>
-              <p className="text-2xl font-extrabold text-[#0A1F44]">₹42,000<span className="text-sm font-medium text-slate-400">/yr</span></p>
-              <p className="text-xs text-emerald-600">Commercial Combined · 3 covers matched</p>
-            </div>
+          <div className="grid grid-cols-2 gap-3 self-center">
+            {[["10 min", "to your protection report"], ["6", "cover categories"], ["48 h", "partner response"], ["4.8/5", "customer rating"]].map(([v, l]) => (
+              <div key={l} className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><p className="font-mono text-3xl font-bold text-white">{v}</p><p className="mt-1 text-sm text-blue-100">{l}</p></div>))}
           </div>
         </div>
       </section>
-
-      {/* CTA band */}
-      <section className="bg-[#0A1F44]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 px-4 sm:px-6 lg:px-8 py-12">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Ready to see where you stand?</h2>
-            <p className="mt-1 text-blue-100/80">The journey takes a few minutes and your answers stay on this device.</p>
-          </div>
-          <Button data-testid="cta-quote-btn" onClick={go} size="lg" className="bg-white text-[#0A1F44] hover:bg-blue-50 shrink-0">
-            Get a quote online <Icons.ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+      <section id="cover" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Business cover</p><h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Cover for every part of your business</h2>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{COVERS.map(([ic, t, d]) => { const C = I(ic); return (
+          <div key={t} data-testid={`cover-category-${t.toLowerCase().replace(/[^a-z]+/g, "-")}`} className="group rounded-2xl border border-slate-200 p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700 transition-colors group-hover:bg-[#0A1F44] group-hover:text-white"><C className="h-5 w-5" /></span>
+            <p className="mt-4 text-lg font-semibold text-slate-900">{t}</p><p className="mt-1 text-sm text-slate-500">{d}</p></div>); })}</div>
       </section>
-
-      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-xs text-slate-400">
-        ComplyStack is a discovery demo aligned to Zurich's SME proposition. Premiums shown are indicative estimates generated by a rule engine, not binding quotes.
-      </footer>
+      <section id="why" className="border-y border-slate-200 bg-slate-50">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">{TRUST.map(([ic, t, d]) => { const C = I(ic); return (
+          <div key={t} className="flex gap-4"><C className="h-6 w-6 shrink-0 text-blue-700" /><div><p className="font-semibold text-slate-900">{t}</p><p className="mt-1 text-sm text-slate-500">{d}</p></div></div>); })}</div>
+      </section>
+      <section className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8"><h2 className="text-3xl font-bold tracking-tight text-slate-900">See your protection report today</h2><p className="mt-2 text-slate-500">No paperwork to start. No obligation.</p><Button data-testid="footer-quote-btn" size="lg" onClick={go} className="mt-6 h-12 bg-[#0A1F44] px-8 hover:bg-[#13306a]">Get a quote online</Button></section>
+      <footer className="bg-[#0A1F44]"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-xs text-blue-100/70 sm:flex-row sm:justify-between sm:px-6 lg:px-8"><span>© 2026 ABC Insure. Insurance is the subject matter of solicitation.</span><span>Indicative prices are subject to underwriting review.</span></div></footer>
     </div>
   );
 }

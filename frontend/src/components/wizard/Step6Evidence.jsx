@@ -12,7 +12,7 @@ export default function Step6Evidence() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Step 6 of 7" title="Evidence that helps us understand your business" lead="Everything here is optional. Evidence helps clarify a relevant exposure — nothing is claimed to be analysed or verified unless it genuinely has been." />
+      <SectionHeader title="Evidence that helps us understand your business" lead="Optional. A short walkthrough video and a few machine photos help your partner prepare before visiting." />
 
       <div className="rounded-xl border border-slate-200 bg-white p-4">
         <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.Video className="h-4 w-4 text-blue-600" /> Premises walkthrough</p>
@@ -24,7 +24,7 @@ export default function Step6Evidence() {
       <div className="rounded-xl border border-slate-200 bg-white p-4">
         <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.Cog className="h-4 w-4 text-blue-600" /> Machinery and assets</p>
         <p className="mb-3 text-xs text-slate-500">Photos plus a few details help describe equipment accurately for any future review.</p>
-        <UploadField accept=".jpg,.png" multiple kind="machinery" analyse testid="machinery-photos-upload"
+        <UploadField accept=".jpg,.png" multiple kind="machinery" testid="machinery-photos-upload"
           files={data.machineryPhotos} onChange={setList("machineryPhotos")} />
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
           <Input data-testid="asset-name" placeholder="Asset name" value={md.name} onChange={(e) => setMd({ name: e.target.value })} />
@@ -40,13 +40,13 @@ export default function Step6Evidence() {
 
       <div className="rounded-xl border border-slate-200 bg-white p-4">
         <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.FileText className="h-4 w-4 text-blue-600" /> Existing policy</p>
-        <p className="mb-3 text-xs text-slate-500">Upload a policy PDF, or go back to Step 5 to enter details manually.</p>
-        <UploadField accept=".pdf" multiple kind="policy" analyse testid="evidence-policy-upload"
+        <p className="mb-3 text-xs text-slate-500">Upload your current policy schedule if you have it to hand.</p>
+        <UploadField accept=".pdf" multiple kind="policy" testid="evidence-policy-upload"
           files={data.evidencePolicyDocs} onChange={setList("evidencePolicyDocs")} />
       </div>
 
       <WhyThisMatters testid="step6-why">
-        Evidence is optional at this stage. It can speed up a later review, but your summary is still useful without it. We never claim a file has been analysed, a machine identified or a policy interpreted unless that has actually happened.
+        You can skip this step and share files later with your partner.
       </WhyThisMatters>
 
       {totalFiles > 0 && (

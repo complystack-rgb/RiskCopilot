@@ -23,7 +23,7 @@ export default function Step4Premises() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Step 4 of 7" title="Understand your premises and operations" lead="A clear picture of where and how you operate helps identify what may need protecting." />
+      <SectionHeader title="Understand your premises and operations" lead="A clear picture of where and how you operate helps identify what may need protecting." />
 
       <div>
         <FieldLabel>Do you own or rent your business premises?</FieldLabel>
@@ -69,7 +69,7 @@ export default function Step4Premises() {
           <div><FieldLabel>Known fire-protection arrangements</FieldLabel>
             <Pill options={safety} value={data.fireProtection} onChange={(v) => update({ fireProtection: v })} testidPrefix="fire-protection" /></div>
         </div>
-        <p className="text-xs text-slate-500">For safety details we offer "Not sure" — a missing or uncertain answer is never treated as proof a safety measure is absent.</p>
+        <p className="text-xs text-slate-500">For safety details we offer "Not sure", a missing or uncertain answer is never treated as proof a safety measure is absent.</p>
       </div>
 
       <WhyThisMatters testid="step4-why">
@@ -79,10 +79,10 @@ export default function Step4Premises() {
       {(data.premisesOwnership || data.locationType) && (
         <RewardCard title="Premises & operations summary" testid="reward-premises">
           <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div><dt className="text-xs text-slate-400">Ownership</dt><dd className="font-medium text-slate-700">{data.premisesOwnership || "—"}</dd></div>
-            <div><dt className="text-xs text-slate-400">Locations</dt><dd className="font-medium text-slate-700">{data.locationType || "—"}{data.extraLocations.filter(Boolean).length ? ` (+${data.extraLocations.filter(Boolean).length})` : ""}</dd></div>
+            <div><dt className="text-xs text-slate-400">Ownership</dt><dd className="font-medium text-slate-700">{data.premisesOwnership || ", "}</dd></div>
+            <div><dt className="text-xs text-slate-400">Locations</dt><dd className="font-medium text-slate-700">{data.locationType || ", "}{data.extraLocations.filter(Boolean).length ? ` (+${data.extraLocations.filter(Boolean).length})` : ""}</dd></div>
             <div><dt className="text-xs text-slate-400">Fire protection</dt><dd className="font-medium text-slate-700">{data.fireProtection || "Needs confirmation"}</dd></div>
-            <div><dt className="text-xs text-slate-400">Machinery noted</dt><dd className="font-medium text-slate-700">{data.significantMachinery || "—"}</dd></div>
+            <div><dt className="text-xs text-slate-400">Machinery noted</dt><dd className="font-medium text-slate-700">{data.significantMachinery || ", "}</dd></div>
           </dl>
           {(!data.fireProtection || data.fireProtection === "Not sure") && (
             <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-700"><Icons.AlertTriangle className="h-3.5 w-3.5" /> Some safety details may need confirmation.</p>

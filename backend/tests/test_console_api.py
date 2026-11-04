@@ -133,12 +133,18 @@ def test_review_and_assign(s, created):
     cid = created["case_id"]
     r = s.post(f"{API}/cases/{cid}/review", json={"decision": "request_justification", "comment": "TEST more"})
     assert r.status_code == 200 and r.json()["status"] == "justification_requested"
-    r = s.post(f"{API}/cases/{cid}/review", json={"decision": "approve", "comment": "TEST ok"})
-    assert r.json()["status"] == "approved" and r.json()["review"]["decision"] == "approve"
-    assert s.post(f"{API}/cases/{cid}/review", json={"decision": "zz", "comment": ""}).status_code == 400
+    # reassign while open works
     r = s.post(f"{API}/cases/{cid}/assign", json={"agent_id": "ag-imran", "actor": "TEST"})
     assert r.status_code == 200 and r.json()["agent_id"] == "ag-imran" and r.json()["distributor_id"] == "org-bharat"
     assert s.post(f"{API}/cases/{cid}/assign", json={"agent_id": "none", "actor": "T"}).status_code == 404
+    # approve not allowed from justification_requested -> agent must resubmit
+    assert s.post(f"{API}/cases/{cid}/review", json={"decision": "approve", "comment": "x"}).status_code == 400
+    c = s.get(f"{API}/cases/{cid}").json()
+    s.post(f"{API}/cases/{cid}/recommendation", json={"products": c["agent_recommendation"]["products"], "justification": c["agent_recommendation"]["justification"], "actor": "TEST"})
+    r = s.post(f"{API}/cases/{cid}/review", json={"decision": "approve", "comment": "TEST ok"})
+    assert r.json()["status"] == "approved" and r.json()["review"]["decision"] == "approve"
+    assert s.post(f"{API}/cases/{cid}/review", json={"decision": "zz", "comment": ""}).status_code == 400
+    assert s.post(f"{API}/cases/{cid}/assign", json={"agent_id": "ag-imran", "actor": "TEST"}).status_code == 400
 
 
 def test_package(s, created):
@@ -165,8 +171,8 @@ def test_team(s):
     assert r.status_code == 200
     a = r.json()
     assert a["active"] is True and a["org_id"] == "org-bharat"
-    assert s.post(f"{API}/orgs/org-bharat/agents", json={"name": "T", "email": "TEST_AGENT@x.com", "city": "S"}).status_code == 400
-    assert s.post(f"{API}/orgs/org-zz/agents", json={"name": "T", "email": "q@x.com", "city": "S"}).status_code == 404
+    assert s.post(f"{API}/orgs/org-bharat/agents", json={"name": "TT", "email": "TEST_AGENT@x.com", "city": "SS"}).status_code == 400
+    assert s.post(f"{API}/orgs/org-zz/agents", json={"name": "TT", "email": "q@x.com", "city": "SS"}).status_code == 404
     p = s.patch(f"{API}/agents/{a['id']}", json={"active": False}).json()
     assert p["active"] is False
     wl = s.get(f"{API}/agents/workload", params={"org_id": "org-bharat"}).json()

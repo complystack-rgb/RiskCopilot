@@ -13,7 +13,7 @@ export default function Step5Insurance() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Step 5 of 7" title="Understand your existing insurance" lead="Anything you tell us here is self-reported and is not treated as verified coverage." />
+      <SectionHeader title="Understand your existing insurance" lead="Anything you tell us here is self-reported and is not treated as verified coverage." />
 
       <div>
         <FieldLabel>Does your business currently have commercial insurance?</FieldLabel>
@@ -34,12 +34,12 @@ export default function Step5Insurance() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="rounded-xl border border-slate-200 bg-white p-4">
-              <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.Upload className="h-4 w-4 text-blue-600" /> Option A — Upload policy documents</p>
-              <UploadField accept=".pdf,.jpg,.png" multiple kind="policy" analyse testid="policy-upload"
+              <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.Upload className="h-4 w-4 text-blue-600" /> Option A, Upload policy documents</p>
+              <UploadField accept=".pdf,.jpg,.png" multiple kind="policy" testid="policy-upload"
                 files={data.uploadedPolicies} onChange={(v) => update((prev) => ({ uploadedPolicies: typeof v === "function" ? v(prev.uploadedPolicies) : v }))} />
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2.5">
-              <p className="flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.PencilLine className="h-4 w-4 text-blue-600" /> Option B — Enter details manually</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-800"><Icons.PencilLine className="h-4 w-4 text-blue-600" /> Option B, Enter details manually</p>
               <Input data-testid="policy-insurer" placeholder="Insurer name" value={mp.insurer} onChange={(e) => setMp({ insurer: e.target.value })} />
               <Input data-testid="policy-type" placeholder="Policy type" value={mp.policyType} onChange={(e) => setMp({ policyType: e.target.value })} />
               <Input data-testid="policy-sum" placeholder="Sum insured / coverage limit (₹)" value={mp.sumInsured} onChange={(e) => setMp({ sumInsured: e.target.value })} />
@@ -77,7 +77,7 @@ export default function Step5Insurance() {
       </div>
 
       <WhyThisMatters testid="step5-why">
-        Knowing what you already hold lets us focus on what may need a closer look rather than repeating cover you have. Having no insurance doesn't automatically mean you're underinsured — it just means the next step is to understand your exposures.
+        Knowing what you already hold lets us focus on what may need a closer look rather than repeating cover you have. Having no insurance doesn't automatically mean you're underinsured, it just means the next step is to understand your exposures.
       </WhyThisMatters>
 
       {data.hasInsurance && (
@@ -89,7 +89,7 @@ export default function Step5Insurance() {
             </div>
             <div>
               <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-700"><Icons.FileText className="h-3.5 w-3.5" /> Documents received</p>
-              <p className="text-slate-600">{data.uploadedPolicies.length ? `${data.uploadedPolicies.length} file(s) — preliminary read only` : (mp.insurer ? `Manual entry: ${mp.insurer}` : "None")}</p>
+              <p className="text-slate-600">{data.uploadedPolicies.length ? `${data.uploadedPolicies.length} file(s), preliminary read only` : (mp.insurer ? `Manual entry: ${mp.insurer}` : "None")}</p>
             </div>
             <div>
               <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-700"><Icons.AlertTriangle className="h-3.5 w-3.5" /> Still needs verification</p>

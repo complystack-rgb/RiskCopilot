@@ -8,9 +8,8 @@ import ConsoleLayout from "@/pages/console/ConsoleLayout";
 import Overview from "@/pages/console/Overview";
 import Cases from "@/pages/console/Cases";
 import CaseDetail from "@/pages/console/CaseDetail";
-import Oversight from "@/pages/console/Oversight";
 import Team from "@/pages/console/Team";
-import Cyber from "@/pages/console/Cyber";
+import DeveloperPortal from "@/pages/console/DeveloperPortal";
 
 function App() {
   return (
@@ -24,9 +23,8 @@ function App() {
               <Route index element={<Overview />} />
               <Route path="cases" element={<Cases />} />
               <Route path="cases/:id" element={<CaseDetail />} />
-              <Route path="oversight" element={<Oversight />} />
               <Route path="team" element={<Team />} />
-              <Route path="cyber" element={<Cyber />} />
+              <Route path="developers" element={<DeveloperPortal />} />
             </Route>
           </Routes>
         </BrowserRouter>

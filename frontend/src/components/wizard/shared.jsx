@@ -16,7 +16,8 @@ export const SectionHeader = ({ eyebrow, title, lead }) => (
   </div>
 );
 
-export const WhyThisMatters = ({ children, testid }) => {
+export const WhyThisMatters = () => null;
+const _WhyUnused = ({ children, testid }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-blue-100 bg-blue-50/60 overflow-hidden">
@@ -83,7 +84,8 @@ export const Pill = ({ options, value, onChange, testidPrefix }) => (
   </div>
 );
 
-export const RewardCard = ({ title, children, testid }) => (
+export const RewardCard = () => null;
+const _RewardUnused = ({ title, children, testid }) => (
   <div data-testid={testid} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
     <div className="mb-3 flex items-center gap-2">
       <Icons.Sparkles className="h-4 w-4 text-amber-500" />
@@ -167,7 +169,7 @@ export const UploadField = ({ accept, multiple, files, onChange, testid, kind = 
                   )}
                   {f.status === "received" && (
                     <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                      <Icons.Clock className="h-3 w-3" /> Received — awaiting review
+                      <Icons.Clock className="h-3 w-3" /> Received, awaiting review
                     </span>
                   )}
                   {f.status === "analysed" && (
@@ -183,7 +185,7 @@ export const UploadField = ({ accept, multiple, files, onChange, testid, kind = 
               {f.analysis && (
                 <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
                   <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-800">
-                    <Icons.Bot className="h-3.5 w-3.5" /> Automated preliminary read (demo — not a verified analysis)
+                    <Icons.Bot className="h-3.5 w-3.5" /> Automated preliminary read (demo, not a verified analysis)
                   </p>
                   <ul className="mt-2 space-y-1">
                     {f.analysis.map((line, i) => (
@@ -208,8 +210,8 @@ function buildDemoAnalysis(filename, kind) {
     return [
       `Classified "${filename}" as ${isPdf ? "a policy schedule (PDF)" : "a policy image"}.`,
       "Looked for insurer name, policy type, sum insured, period of cover and premium.",
-      "A sum insured / coverage limit field appears present — confirm it reflects today's rebuild and stock values, not an older figure.",
-      "Renewal or expiry date could not be confirmed with certainty — enter it manually so we don't miss a lapse.",
+      "A sum insured / coverage limit field appears present, confirm it reflects today's rebuild and stock values, not an older figure.",
+      "Renewal or expiry date could not be confirmed with certainty, enter it manually so we don't miss a lapse.",
       "No exclusions or warranties have been interpreted; that requires a human review of the wording.",
     ];
   }

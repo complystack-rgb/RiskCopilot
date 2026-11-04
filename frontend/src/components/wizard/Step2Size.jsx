@@ -8,7 +8,7 @@ export default function Step2Size() {
   const { data, update } = useJourney();
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Step 2 of 7" title="Understand your business size" lead="Workforce, payroll and revenue help frame the potential financial impact of disruption." />
+      <SectionHeader title="Understand your business size" lead="Workforce, payroll and revenue help frame the potential financial impact of disruption." />
 
       <div>
         <FieldLabel>How many people work in your business?</FieldLabel>
@@ -34,7 +34,7 @@ export default function Step2Size() {
       </div>
 
       <WhyThisMatters testid="step2-why">
-        These figures frame how much a disruption could cost and which questions may need further review. We don't calculate a recommended coverage amount from them — that needs proper assessment.
+        These figures frame how much a disruption could cost and which questions may need further review. We don't calculate a recommended coverage amount from them, that needs proper assessment.
       </WhyThisMatters>
 
       {(data.headcount || data.payrollBand || data.revenueBand) && (
@@ -46,12 +46,12 @@ export default function Step2Size() {
                 <div key={x.l} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
                   <I className="mx-auto h-4 w-4 text-blue-600" />
                   <p className="mt-1 text-[11px] uppercase tracking-wide text-slate-400">{x.l}</p>
-                  <p className="mt-0.5 text-sm font-semibold text-slate-800 break-words">{x.v || "—"}</p>
+                  <p className="mt-0.5 text-sm font-semibold text-slate-800 break-words">{x.v || ", "}</p>
                 </div>
               );
             })}
           </div>
-          <p className="mt-3 text-xs text-slate-500">This frames potential impact — it is not a coverage recommendation.</p>
+          <p className="mt-3 text-xs text-slate-500">This frames potential impact, it is not a coverage recommendation.</p>
         </RewardCard>
       )}
     </div>

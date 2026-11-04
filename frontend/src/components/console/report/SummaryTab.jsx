@@ -3,76 +3,77 @@ import { toast } from "sonner";
 import { api, errMsg } from "@/lib/api";
 import { useConsole } from "@/context/ConsoleContext";
 import { Panel, BandBadge, ScoreRing } from "@/components/console/ui";
-import { inr } from "@/lib/consoleUi";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const Indicators = ({ items, onEvidence }) => (
-  <ul className="divide-y divide-slate-100" data-testid="fire-indicators">
-    {items.map((i) => (
-      <li key={i.id} className="flex items-start gap-3 py-3">
-        <span className="mt-0.5"><BandBadge band={i.severity} /></span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-slate-900">{i.finding}</p>
-          <p className="mt-0.5 text-xs text-slate-500"><span className="font-semibold text-slate-600">Verify on site:</span> {i.verify}</p>
-        </div>
-        <button data-testid={`indicator-evidence-${i.id}`} onClick={() => onEvidence(i.evidence)} className="shrink-0 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-50">Evidence</button>
-      </li>
-    ))}
-  </ul>
-);
-
-const Sums = ({ r }) => (
-  <dl className="grid grid-cols-2 gap-3 text-xs">
-    {[["Building", r.sums_insured.building], ["Plant & machinery", r.sums_insured.plant], ["Stock", r.sums_insured.stock], ["Total at risk", r.total_sum_insured]].map(([k, v], i) => (
-      <div key={k} className={`rounded-md border p-3 ${i === 3 ? "border-[#0A1F44] bg-[#0A1F44] text-white" : "border-slate-200"}`}>
-        <dt className={`text-[10px] uppercase tracking-wider ${i === 3 ? "text-blue-200" : "text-slate-400"}`}>{k}</dt>
-        <dd className="mt-1 font-mono text-base font-bold">{v ? inr(v) : "Not owned"}</dd>
-      </div>
-    ))}
-  </dl>
-);
-
-const Checklist = ({ items, c, onUpdate }) => {
-  const { persona } = useConsole();
-  const done = c.checklist_done || [];
+export const SummaryTab = ({ c, onUpdate, onEvidence }) => {
+  const { money, meta, persona } = useConsole();
+  const a = c.assessment;
   const toggle = async (i) => {
-    const n = done.includes(i) ? done.filter((x) => x !== i) : [...done, i];
+    const n = c.checklist_done.includes(i) ? c.checklist_done.filter((x) => x !== i) : [...c.checklist_done, i];
     try { const { data } = await api.post(`/cases/${c.id}/checklist`, { done: n, actor: persona.name }); onUpdate(data); } catch (e) { toast.error(errMsg(e)); }
   };
   return (
-    <ul className="space-y-2" data-testid="inspection-checklist">
-      {items.map((t, i) => (
-        <li key={i} className="flex items-start gap-2.5 text-sm"><Checkbox data-testid={`checklist-item-${i}`} checked={done.includes(i)} onCheckedChange={() => toggle(i)} className="mt-0.5" /><span className={done.includes(i) ? "text-slate-400 line-through" : "text-slate-700"}>{t}</span></li>
-      ))}
-      <li className="pt-1 font-mono text-[11px] text-slate-400">{done.length}/{items.length} verified</li>
-    </ul>
+    <div className="grid gap-6 lg:grid-cols-3">
+      <div className="space-y-6 lg:col-span-2">
+        <Panel title="Protection gaps" icon={Icons.ShieldAlert} testid="gaps-panel" action={<span className="font-mono text-sm font-bold text-rose-600">{money(a.protection_gap)}</span>}>
+          <ul className="divide-y divide-slate-100">{a.gaps.map((g) => (
+            <li key={g.category} className="flex items-center gap-3 py-3" data-testid={`gap-${g.category}`}>
+              <BandBadge band={g.severity} /><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-slate-900">{g.title}</p><p className="text-xs text-slate-500">{meta.categories[g.category]} · {g.covered ? "partly covered today" : "not covered today"}</p></div>
+              <span className="font-mono text-sm font-semibold">{money(g.uncovered_value)}</span></li>))}</ul>
+        </Panel>
+        <Panel title="Findings from the evidence" icon={Icons.ScanSearch} testid="findings-panel">
+          <ul className="divide-y divide-slate-100">{c.indicators.map((i) => (
+            <li key={i.id} className="flex items-start gap-3 py-3"><BandBadge band={i.severity} />
+              <div className="min-w-0 flex-1"><p className="text-sm font-medium text-slate-900">{i.finding}</p><p className="mt-0.5 text-xs text-slate-500">Verify on site: {i.verify}</p></div>
+              <button data-testid={`finding-evidence-${i.id}`} onClick={() => onEvidence(i.photo)} className="shrink-0 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-50">View photo</button></li>))}</ul>
+        </Panel>
+      </div>
+      <div className="space-y-6">
+        <Panel title="Risk score" icon={Icons.Gauge}><div className="flex items-center gap-5"><ScoreRing score={a.risk_score} band={a.risk_band} label="Risk" />
+          <div className="space-y-1 text-xs"><BandBadge band={a.risk_band}>{a.risk_band} risk</BandBadge><p className="text-slate-500">Coverage today: <b className="text-slate-900">{Math.round(a.coverage_ratio * 100)}%</b> of insurable value</p><p className="text-slate-500">Insurable value: <b className="text-slate-900">{money(a.total_insurable)}</b></p></div></div></Panel>
+        <Panel title="Site visit checklist" icon={Icons.ClipboardCheck} testid="site-checklist">
+          <ul className="space-y-2">{c.checklist.map((t, i) => <li key={i} className="flex items-start gap-2.5 text-sm"><Checkbox data-testid={`checklist-${i}`} checked={c.checklist_done.includes(i)} onCheckedChange={() => toggle(i)} className="mt-0.5" /><span className={c.checklist_done.includes(i) ? "text-slate-400 line-through" : "text-slate-700"}>{t}</span></li>)}</ul>
+          <p className="mt-3 font-mono text-[11px] text-slate-400">{c.checklist_done.length}/{c.checklist.length} verified</p>
+        </Panel>
+        <Panel title="Client contact" icon={Icons.Contact}><dl className="space-y-1.5 text-xs">{[["Contact", c.sme.contact_name], ["Phone", c.sme.phone], ["Email", c.sme.email], ["Employees", c.sme.employees], ["Annual revenue", money(c.sme.revenue)]].map(([k, v]) => <div key={k} className="flex justify-between gap-3"><dt className="text-slate-500">{k}</dt><dd className="truncate font-medium text-slate-900">{v}</dd></div>)}</dl></Panel>
+      </div>
+    </div>
   );
 };
 
-export const SummaryTab = ({ c, onEvidence, onUpdate }) => {
-  const r = c.report;
+export const AssetsTab = ({ c }) => {
+  const { money } = useConsole();
+  const v = c.assessment.values;
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[["Building", v.building], ["Plant & machinery", v.machinery], ["Stock", v.stock], ["Annual revenue", v.revenue]].map(([k, x]) => (
+        <div key={k} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-[10px] uppercase tracking-wider text-slate-400">{k}</p><p className="mt-1 font-mono text-xl font-bold">{money(x)}</p></div>))}</div>
+      <Panel title="Machinery register · read from ID plates" icon={Icons.Cog} testid="machinery-register">
+        <div className="-mx-5 -my-5 overflow-x-auto"><table className="w-full min-w-[820px] text-left text-xs">
+          <thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500"><tr>{["Machine", "Manufacturer · Model", "Serial", "Year", "Units", "Unit value", "Replacement value", "Read confidence"].map((h) => <th key={h} className="px-5 py-2.5">{h}</th>)}</tr></thead>
+          <tbody>{c.machinery.map((mm) => <tr key={mm.id} className="border-t border-slate-100"><td className="px-5 py-3 font-semibold">{mm.type}</td><td className="px-5 py-3">{mm.manufacturer} · {mm.model}</td><td className="px-5 py-3 font-mono">{mm.serial}</td><td className="px-5 py-3 font-mono">{mm.year}</td><td className="px-5 py-3 font-mono">{mm.units}</td><td className="px-5 py-3 font-mono">{money(mm.unit_value)}</td><td className="px-5 py-3 font-mono font-semibold">{money(mm.replacement_value)}</td><td className="px-5 py-3 font-mono text-emerald-600">{Math.round(mm.confidence * 100)}%</td></tr>)}</tbody>
+        </table></div>
+      </Panel>
+    </div>
+  );
+};
+
+export const CoverageTab = ({ c }) => {
+  const { money, meta } = useConsole();
+  const a = c.assessment, p = c.prior_policy;
   return (
     <div className="grid gap-6 lg:grid-cols-3">
-      <div className="space-y-6 lg:col-span-2">
-        <Panel title="Fire risk indicators found in the evidence" icon={Icons.Flame} testid="indicators-panel"><Indicators items={r.indicators} onEvidence={onEvidence} /></Panel>
-        <Panel title="Assets at risk" icon={Icons.Building2}><Sums r={r} /></Panel>
-        {c.sme_assessment?.areas && (
-          <Panel title="What the SME told us (discovery journey)" icon={Icons.MessageSquareText} testid="sme-assessment">
-            <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-              {c.sme_assessment.areas.map((a) => (<div key={a.id}><div className="flex justify-between text-xs"><span className="text-slate-600">{a.label}</span><span className="font-semibold">{a.level}</span></div><div className="mt-1 h-1.5 rounded bg-slate-100"><div className="h-full rounded bg-blue-600" style={{ width: `${a.score}%` }} /></div></div>))}
-            </div>
-            <ul className="mt-4 space-y-1.5 text-xs text-slate-600">{(c.sme_assessment.narrative || []).slice(0, 4).map((l, i) => <li key={i} className="flex gap-1.5"><Icons.ChevronRight className="mt-0.5 h-3 w-3 shrink-0 text-blue-500" />{l}</li>)}</ul>
-          </Panel>
-        )}
-      </div>
-      <div className="space-y-6">
-        <Panel title="Risk score" icon={Icons.Gauge}>
-          <div className="flex items-center gap-5"><ScoreRing score={r.fire_score} band={r.fire_band} /><div><BandBadge band={r.fire_band}>{r.fire_band} fire risk</BandBadge><p className="mt-2 text-xs leading-relaxed text-slate-500">Weighted from {r.indicators.length} indicators, {r.machinery.length} machine types and the location. {r.location.eq_zone && "Seismic zone. "}{r.location.flood_zone && "Flood-prone state."}</p></div></div>
-        </Panel>
-        <Panel title="Inspection prep checklist" icon={Icons.ClipboardCheck}><Checklist items={r.inspection_checklist} c={c} onUpdate={onUpdate} /></Panel>
-        <Panel title="Ask the SME for" icon={Icons.FileQuestion}><ul className="space-y-1.5 text-sm text-slate-700" data-testid="data-requests">{r.data_requests.map((d) => <li key={d} className="flex gap-2"><Icons.Dot className="h-5 w-5 shrink-0 text-amber-500" />{d}</li>)}</ul></Panel>
-        <p className="text-[11px] leading-relaxed text-slate-400">{r.disclaimer}</p>
-      </div>
+      <Panel title="Current cover" icon={Icons.FileText} testid="current-cover">
+        {p ? <dl className="space-y-2.5 text-xs">{[["Insurer", p.insurer], ["Covers", p.categories.map((x) => meta.categories[x]).join(", ")], ["Property sum insured", money(p.sum_insured)], ["Premium", money(p.premium)], ["Renewal", p.expiry], ["Source", p.source]].map(([k, v]) => (
+          <div key={k} className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt className="text-slate-500">{k}</dt><dd className="text-right font-medium text-slate-900">{v}</dd></div>))}</dl>
+          : <p className="text-sm text-slate-600" data-testid="no-cover">No policy in force. Every recommended cover is new business.</p>}
+      </Panel>
+      <Panel title="Exposure vs cover by category" icon={Icons.Scale} className="lg:col-span-2" testid="exposure-vs-cover">
+        <div className="space-y-4">{Object.entries(a.exposure).map(([cat, exp]) => { const gap = a.gaps.find((g) => g.category === cat); const covered = exp - (gap?.uncovered_value || 0); return (
+          <div key={cat} className="text-xs"><div className="mb-1 flex justify-between"><span className="font-medium text-slate-700">{meta.categories[cat]}</span><span className="font-mono">{money(covered)} <span className="text-slate-400">of</span> {money(exp)}</span></div>
+            <div className="flex h-3 overflow-hidden rounded bg-rose-100"><div className="h-full bg-emerald-500" style={{ width: `${(covered / exp) * 100}%` }} /></div>
+            {gap && <p className="mt-1 text-rose-600">Gap {money(gap.uncovered_value)}</p>}</div>); })}</div>
+      </Panel>
     </div>
   );
 };

@@ -5,12 +5,12 @@ import { priorityTitle } from "@/lib/summary";
 import { Textarea } from "@/components/ui/textarea";
 
 const WHY = {
-  premises: "Damage to the space you operate from can halt everything else — it's often the single largest exposure.",
+  premises: "Damage to the space you operate from can halt everything else, it's often the single largest exposure.",
   machinery: "If critical equipment fails or is damaged, production and income can stop even if everything else is intact.",
   stock: "Inventory and raw materials tie up capital and can be destroyed, spoiled or stolen.",
   assets: "Computers, tools and furniture are easy to overlook but costly to replace all at once.",
   continuity: "If revenue stops while rent, salaries and loans continue, the gap can be more damaging than the physical loss.",
-  employees: "Employing people creates obligations — from workplace injury to statutory cover.",
+  employees: "Employing people creates obligations, from workplace injury to statutory cover.",
   thirdparty: "Your activities can create liability to customers, suppliers and the public.",
   vehicles: "Vehicles and goods in transit face risks on the road that premises cover usually excludes.",
 };
@@ -29,7 +29,7 @@ export default function Step3Priorities() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Step 3 of 7" title="What would be hardest for your business to lose?" lead="Every business depends on different things. Pick what would be hardest to lose or recover from — choose as many as apply." />
+      <SectionHeader title="What would be hardest for your business to lose?" lead="Every business depends on different things. Pick what would be hardest to lose or recover from, choose as many as apply." />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {PRIORITIES.map((p) => (
@@ -48,7 +48,7 @@ export default function Step3Priorities() {
 
       {isNotSure && (
         <div className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-          <p className="text-sm font-medium text-blue-900">No problem — two quick questions will help us point you in the right direction.</p>
+          <p className="text-sm font-medium text-blue-900">No problem, two quick questions will help us point you in the right direction.</p>
           <div>
             <FieldLabel>1. What assets or resources would be hardest to replace?</FieldLabel>
             <Textarea data-testid="notsure-assets" value={data.notSureAssets} onChange={(e) => update({ notSureAssets: e.target.value })} placeholder="e.g. our main oven, our customer records..." />
@@ -61,7 +61,7 @@ export default function Step3Priorities() {
       )}
 
       <WhyThisMatters testid="step3-why">
-        We ask what matters to you before suggesting any products. That keeps the journey about protecting your business — not selling a predefined list.
+        We ask what matters to you before suggesting any products. That keeps the journey about protecting your business, not selling a predefined list.
       </WhyThisMatters>
 
       {selected.filter((p) => p !== "notsure").length > 0 && (
@@ -74,7 +74,7 @@ export default function Step3Priorities() {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-amber-700">Preliminary only — this is not a final insurance recommendation.</p>
+          <p className="mt-3 text-xs text-amber-700">Preliminary only, this is not a final insurance recommendation.</p>
         </RewardCard>
       )}
     </div>

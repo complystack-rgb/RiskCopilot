@@ -1,232 +1,96 @@
 import { useState, useEffect, useMemo } from "react";
 import { useJourney } from "@/context/JourneyContext";
-import { SectionHeader } from "./shared";
-import { STATUS, generateConsiderations, nextAction, activityLabel, priorityTitle } from "@/lib/summary";
-import { runEngine, fmtINR } from "@/lib/riskEngine";
+import { runEngine } from "@/lib/riskEngine";
+import { categoryLabel } from "@/lib/summary";
 import { Button } from "@/components/ui/button";
 import * as Icons from "lucide-react";
-import { toast } from "sonner";
 import { BrokerReviewDialog } from "./BrokerReviewDialog";
 
-const AreaBar = ({ a }) => {
-  const color = a.score >= 75 ? "bg-rose-500" : a.score >= 55 ? "bg-amber-500" : a.score >= 30 ? "bg-blue-500" : "bg-emerald-500";
-  const text = a.score >= 75 ? "text-rose-600" : a.score >= 55 ? "text-amber-600" : a.score >= 30 ? "text-blue-600" : "text-emerald-600";
-  return (
-    <div data-testid={`exposure-area-${a.id}`}>
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-slate-700">{a.label}</span>
-        <span className={`text-xs font-bold ${text}`}>{a.level}</span>
-      </div>
-      <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-        <div className={`h-full rounded-full ${color} transition-all duration-700`} style={{ width: `${a.score}%` }} />
-      </div>
-      {a.factors.length > 0 && <p className="mt-1 text-[11px] text-slate-400">{a.factors.slice(0, 2).map((f) => f.replace(/^[+-]\d+ /, "")).join(" · ")}</p>}
-    </div>
-  );
+const PHASES = ["Reviewing your business profile", "Mapping the risks that apply to your sector", "Comparing your current cover with your needs", "Selecting the right cover and indicative prices"];
+const PEERS = {
+  manufacturing: { covered: [["Fire & property", 92], ["Business interruption", 61], ["Machinery breakdown", 48], ["Goods in transit", 55]], causes: ["Electrical short circuits", "Machinery overheating", "Flood and water damage", "Theft of stock"] },
+  retail: { covered: [["Shop contents", 88], ["Public liability", 72], ["Burglary", 64], ["Business interruption", 38]], causes: ["Burglary and theft", "Water damage", "Customer injury", "Electrical fire"] },
+  default: { covered: [["Property & contents", 84], ["Public liability", 66], ["Business interruption", 41], ["Cyber", 22]], causes: ["Fire and electrical faults", "Water damage", "Third-party injury claims", "Data breach and fraud"] },
 };
+const TESTIMONIALS = [["Our weaving unit had a short-circuit fire in March. The claim was settled in 19 days, and income cover kept wages paid.", "Owner, textile unit, Surat"], ["The report showed we were insured for barely half our machinery value. We fixed it before renewal.", "Director, auto components, Pune"], ["Simple questions, clear answers, and the broker came already knowing our site.", "Founder, food processing, Indore"]];
 
-const Icon = ({ name, className }) => { const C = Icons[name] || Icons.Shield; return <C className={className} />; };
-
-const Glance = ({ label, value }) => (
-  <div className="rounded-lg border border-slate-200 bg-white p-3">
-    <p className="text-[11px] uppercase tracking-wide text-slate-400">{label}</p>
-    <p className="mt-0.5 text-sm font-medium text-slate-800">{value || "Not provided"}</p>
+const Loading = ({ phase }) => (
+  <div className="mx-auto max-w-lg py-24 text-center" data-testid="report-loading">
+    <div className="relative mx-auto h-16 w-16"><div className="absolute inset-0 animate-spin rounded-full border-4 border-blue-100 border-t-[#0A1F44]" /><Icons.ShieldCheck className="absolute inset-0 m-auto h-7 w-7 text-[#0A1F44]" /></div>
+    <h2 className="mt-6 text-xl font-bold text-slate-900">Analysing your business and finding the best insurance cover for your needs and growth plans</h2>
+    <ul className="mt-6 space-y-2 text-left">{PHASES.map((p, i) => (
+      <li key={p} className={`flex items-center gap-2.5 text-sm transition-opacity ${i <= phase ? "opacity-100" : "opacity-30"}`}>{i < phase ? <Icons.CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <Icons.Circle className="h-4 w-4 text-slate-300" />}{p}</li>))}</ul>
   </div>
 );
 
-export default function Step7Summary() {
-  const { data, setStep } = useJourney();
-  const [analysing, setAnalysing] = useState(true);
+const Section = ({ title, sub, children, testid }) => (
+  <section data-testid={testid}><h2 className="text-lg font-bold text-slate-900">{title}</h2>{sub && <p className="mt-0.5 text-sm text-slate-500">{sub}</p>}<div className="mt-4">{children}</div></section>
+);
+
+export default function ProtectionReport() {
+  const { data } = useJourney();
   const [phase, setPhase] = useState(0);
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const phases = ["Reading your answers", "Scoring exposure across 6 areas", "Matching Zurich SME products", "Estimating indicative premiums"];
-
-  useEffect(() => {
-    setAnalysing(true); setPhase(0);
-    const t1 = setInterval(() => setPhase((p) => Math.min(p + 1, phases.length - 1)), 420);
-    const t2 = setTimeout(() => { setAnalysing(false); clearInterval(t1); }, 1900);
-    return () => { clearInterval(t1); clearTimeout(t2); };
-  }, []);
-
+  const [open, setOpen] = useState(false);
   const engine = useMemo(() => runEngine(data), [data]);
-  const considerations = generateConsiderations(data);
-  const action = nextAction(data);
-  const NextIcon = Icons[action.icon] || Icons.ArrowRight;
-
-  const download = () => {
-    const payload = { business: data, assessment: engine };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(data.businessName || "complystack").replace(/\s+/g, "-").toLowerCase()}-protection-summary.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Summary downloaded");
-  };
-
-  if (analysing) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="relative flex h-16 w-16 items-center justify-center">
-          <span className="absolute inset-0 animate-ping rounded-full bg-blue-200 opacity-60" />
-          <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white"><Icons.Cpu className="h-7 w-7" /></span>
-        </div>
-        <h3 className="mt-6 text-xl font-bold text-slate-900">Running the ComplyStack risk engine</h3>
-        <p className="mt-1 text-sm text-slate-500">Analysing your business against Zurich's SME products…</p>
-        <ul className="mt-6 space-y-2 text-left" data-testid="analysing-phases">
-          {phases.map((p, i) => (
-            <li key={p} className="flex items-center gap-2 text-sm">
-              {i < phase ? <Icons.CheckCircle2 className="h-4 w-4 text-emerald-500" /> : i === phase ? <Icons.Loader2 className="h-4 w-4 animate-spin text-blue-600" /> : <Icons.Circle className="h-4 w-4 text-slate-300" />}
-              <span className={i <= phase ? "text-slate-700" : "text-slate-400"}>{p}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
-
-  const { exposure, recommendations, narrative } = engine;
+  useEffect(() => { const t = setInterval(() => setPhase((p) => p + 1), 900); return () => clearInterval(t); }, []);
+  if (phase < PHASES.length + 1) return <Loading phase={phase} />;
+  const recs = engine.recommendations;
+  const gaps = recs.filter((r) => r.isGap);
+  const peers = PEERS[data.category] || PEERS.default;
+  const ov = engine.exposure.overall;
+  const maxGap = gaps.reduce((s, r) => s + r.quote.max, 0);
 
   return (
-    <div className="space-y-6">
-      <SectionHeader eyebrow="Step 7 of 7" title="Your business protection summary" lead="A preliminary assessment generated by our risk engine. Premiums are indicative estimates, not binding quotes." />
-
-      <div className="flex flex-wrap gap-2">
-        <Button data-testid="summary-download-btn" onClick={download}><Icons.Download className="mr-2 h-4 w-4" /> Download summary</Button>
-        <Button variant="outline" data-testid="summary-print-btn" onClick={() => window.print()}><Icons.Printer className="mr-2 h-4 w-4" /> Print / Save as PDF</Button>
+    <div className="space-y-10 animate-in fade-in duration-500" data-testid="protection-report">
+      <div className="flex flex-col gap-4 rounded-2xl bg-[#0A1F44] p-6 text-white sm:flex-row sm:items-end sm:justify-between sm:p-8">
+        <div><p className="text-xs font-semibold uppercase tracking-widest text-blue-200">Your Protection Report</p><h1 className="mt-1 text-3xl font-bold" data-testid="report-business-name">{data.businessName}</h1>
+          <p className="mt-1 text-sm text-blue-100">{categoryLabel(data.category)}{data.activity ? ` · ${data.activity}` : ""}{data.city ? ` · ${data.city}` : ""} · {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p></div>
+        <div className="flex gap-2 print:hidden">
+          <Button data-testid="download-summary-btn" variant="outline" onClick={() => window.print()} className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"><Icons.Download className="mr-1.5 h-4 w-4" />Download summary</Button>
+          <Button data-testid="submit-review-btn" onClick={() => setOpen(true)} className="bg-blue-500 hover:bg-blue-400"><Icons.Send className="mr-1.5 h-4 w-4" />Submit for review</Button>
+        </div>
       </div>
 
-      {/* Exposure profile */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6" data-testid="exposure-profile">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Icons.Gauge className="h-5 w-5 text-blue-600" /> Exposure profile</h3>
-            <p className="mt-1 text-sm text-slate-500">How your answers map across the main areas of business risk.</p>
-          </div>
-          <div className={`rounded-xl border px-4 py-2 text-center ${exposure.overall.level === "High" ? "border-rose-200 bg-rose-50" : exposure.overall.level === "Elevated" ? "border-amber-200 bg-amber-50" : "border-blue-200 bg-blue-50"}`}>
-            <p className="text-[10px] uppercase tracking-wide text-slate-400">Overall</p>
-            <p className="text-sm font-bold text-slate-900">{exposure.overall.level}</p>
-          </div>
-        </div>
-        <div className="mt-5 grid sm:grid-cols-2 gap-x-8 gap-y-4">
-          {exposure.areas.map((a) => <AreaBar key={a.id} a={a} />)}
-        </div>
-      </section>
+      <Section title="Recommended ABC Insure cover" sub="Chosen for your sector, size and the risks you told us about. Prices are indicative and confirmed after review." testid="recommended-cover">
+        <div className="grid gap-4 md:grid-cols-2">{recs.map((r) => (
+          <div key={r.product.id} data-testid={`cover-card-${r.product.id}`} className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+            <div className="flex items-start justify-between gap-3"><div><p className="text-base font-bold text-slate-900">{r.product.name}</p><p className="mt-0.5 text-sm text-slate-500">{r.product.tagline}</p></div>
+              <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${r.isGap ? "bg-rose-50 text-rose-700" : r.status === "Already indicated" ? "bg-slate-100 text-slate-600" : "bg-blue-50 text-blue-700"}`}>{r.isGap ? "Not covered today" : r.status}</span></div>
+            {r.reasonLines?.[0] && <p className="mt-3 text-sm text-slate-600">{r.reasonLines[0]}</p>}
+            <div className="mt-auto flex items-end justify-between border-t border-slate-100 pt-4"><span className="text-xs text-slate-400">Indicative annual premium</span><span className="font-mono text-lg font-bold text-[#0A1F44]">₹{r.quote.min.toLocaleString("en-IN")} – ₹{r.quote.max.toLocaleString("en-IN")}</span></div>
+          </div>))}</div>
+      </Section>
 
-      {/* AI underwriting analysis */}
-      <section className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6" data-testid="ai-analysis">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white"><Icons.Bot className="h-4 w-4" /></span>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Underwriting analysis</h3>
-            <p className="text-xs text-slate-500">{narrative.headline} · generated from your answers</p>
-          </div>
+      <Section title="Exposure profile" sub="How exposed your business is in each area, based on your answers." testid="exposure-profile">
+        <div className="grid gap-6 rounded-xl border border-slate-200 bg-white p-6 md:grid-cols-[180px_1fr]">
+          <div className="text-center"><p className="font-mono text-5xl font-bold text-[#0A1F44]">{ov.score}</p><p className="text-xs uppercase tracking-wider text-slate-400">Overall exposure</p><p className="mt-2 inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{ov.level}</p></div>
+          <div className="grid gap-4 sm:grid-cols-2">{engine.exposure.areas.map((a) => (
+            <div key={a.id} data-testid={`exposure-area-${a.id}`}><div className="flex justify-between text-sm"><span className="font-medium text-slate-700">{a.label}</span><span className="text-xs font-bold text-slate-900">{a.level}</span></div>
+              <div className="mt-1.5 h-2 rounded-full bg-slate-100"><div className={`h-full rounded-full ${a.score >= 75 ? "bg-rose-500" : a.score >= 55 ? "bg-amber-500" : "bg-blue-600"}`} style={{ width: `${a.score}%` }} /></div></div>))}</div>
         </div>
-        <div className="mt-4 space-y-2.5">
-          {narrative.narrative.map((line, i) => (
-            <p key={i} className="flex items-start gap-2 text-sm text-slate-700 leading-relaxed">
-              <Icons.ChevronRight className="mt-1 h-3.5 w-3.5 shrink-0 text-blue-500" />{line}
-            </p>
-          ))}
-        </div>
-        <p className="mt-4 text-[11px] text-slate-400">Generated by a deterministic rule engine for guidance only — it does not confirm or deny any coverage.</p>
-      </section>
+      </Section>
 
-      {/* Recommended products + quotes */}
-      <section data-testid="recommendations">
-        <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Icons.ShieldCheck className="h-5 w-5 text-blue-600" /> Recommended Zurich cover</h3>
-        <p className="mt-1 mb-4 text-sm text-slate-500">Matched to your sector and priorities, with an indicative annual premium for each.</p>
-        <div className="space-y-3">
-          {recommendations.map((r) => (
-            <div key={r.product.id} data-testid={`recommendation-${r.product.id}`} className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0A1F44] text-white"><Icon name={r.product.icon} className="h-6 w-6" /></div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-bold text-slate-900">{r.product.name}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${r.status === "Recommended" ? "bg-blue-100 text-blue-700" : r.status === "Already indicated" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{r.status}</span>
-                    {r.isGap && <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">Potential gap</span>}
-                  </div>
-                  <p className="mt-1 text-sm text-slate-500">{r.product.tagline}</p>
-                  <ul className="mt-2 space-y-1">
-                    {r.reasonLines.slice(0, 3).map((l, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-xs text-slate-600"><Icons.Check className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" />{l}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="shrink-0 sm:text-right">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400">Indicative / year</p>
-                  <p className="text-xl font-extrabold text-[#0A1F44]">{fmtINR(r.quote.min)}–{fmtINR(r.quote.max)}</p>
-                  <p className="mt-0.5 text-[11px] text-slate-400">Confidence: {r.confidence}</p>
-                </div>
-              </div>
-              {r.quote.drivers.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
-                  {r.quote.drivers.map((d, i) => <span key={i} className="rounded-md bg-slate-50 px-2 py-0.5 text-[11px] text-slate-500">{d}</span>)}
-                </div>
-              )}
-            </div>
-          ))}
+      <Section title="What you may not know" testid="insights">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-5"><Icons.ShieldOff className="h-5 w-5 text-rose-600" /><p className="mt-3 text-3xl font-bold text-rose-700">{gaps.length}</p><p className="text-sm font-semibold text-rose-800">risks with no cover today</p>
+            <p className="mt-2 text-xs text-rose-700">{gaps.length ? `${gaps.map((g) => g.product.name).slice(0, 3).join(", ")}. Protecting these costs about ₹${maxGap.toLocaleString("en-IN")} a year at most.` : "Your current cover addresses the main risks we found."}</p></div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5"><Icons.Users className="h-5 w-5 text-blue-600" /><p className="mt-3 text-sm font-semibold text-slate-900">How similar businesses are covered</p>
+            <ul className="mt-3 space-y-2">{peers.covered.map(([k, v]) => <li key={k} className="text-xs"><div className="flex justify-between"><span className="text-slate-600">{k}</span><span className="font-mono font-semibold">{v}%</span></div><div className="mt-1 h-1.5 rounded bg-slate-100"><div className="h-full rounded bg-blue-600" style={{ width: `${v}%` }} /></div></li>)}</ul></div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5"><Icons.Flame className="h-5 w-5 text-orange-600" /><p className="mt-3 text-sm font-semibold text-slate-900">Most common claims in your sector</p>
+            <ol className="mt-3 space-y-2 text-sm text-slate-700">{peers.causes.map((c, i) => <li key={c} className="flex gap-2"><span className="font-mono text-xs text-slate-400">{i + 1}</span>{c}</li>)}</ol></div>
         </div>
-      </section>
+      </Section>
 
-      {/* Business at a glance */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900"><Icons.LayoutGrid className="h-5 w-5 text-blue-600" /> Your business at a glance</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <Glance label="Business" value={data.businessName} />
-          <Glance label="Activity" value={activityLabel(data)} />
-          <Glance label="Location" value={[data.city, data.state].filter(Boolean).join(", ")} />
-          <Glance label="Premises" value={data.premisesOwnership} />
-          <Glance label="Team" value={data.headcount} />
-          <Glance label="Revenue" value={data.revenueExact ? fmtINR(Number(data.revenueExact)) : data.revenueBand} />
-          <Glance label="Ownership" value={data.ownershipStructure} />
-          <Glance label="Insurance" value={data.hasInsurance === "Yes" ? `${data.insuranceTypes.length} type(s)` : data.hasInsurance} />
-          <Glance label="Prior claim" value={data.hasClaim} />
+      <Section title="Trusted by businesses like yours" testid="social-proof">
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="rounded-xl bg-[#0A1F44] p-5 text-white"><p className="text-3xl font-bold">4.8<span className="text-base text-blue-200">/5</span></p><div className="mt-1 flex text-amber-400">{Array.from({ length: 5 }).map((_, i) => <Icons.Star key={i} className="h-4 w-4 fill-current" />)}</div><p className="mt-3 text-sm text-blue-100">12,400 similar businesses protected</p></div>
+          {TESTIMONIALS.map(([q, who]) => <figure key={who} className="rounded-xl border border-slate-200 bg-white p-5"><Icons.Quote className="h-4 w-4 text-blue-300" /><blockquote className="mt-2 text-sm text-slate-700">{q}</blockquote><figcaption className="mt-3 text-xs font-medium text-slate-500">{who}</figcaption></figure>)}
         </div>
-      </section>
+        <p className="mt-3 text-[11px] text-slate-400">Sample content for demonstration.</p>
+      </Section>
 
-      {/* Considerations */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h3 className="mb-1 flex items-center gap-2 text-lg font-bold text-slate-900"><Icons.Search className="h-5 w-5 text-amber-600" /> What may need a closer look</h3>
-        <p className="mb-4 text-sm text-slate-500">These relate only to your answers. A missing answer is never labelled a confirmed insurance gap.</p>
-        <div className="mb-4 flex flex-wrap gap-3 text-xs">
-          {Object.values(STATUS).map((s) => (<span key={s.label} className="flex items-center gap-1.5 text-slate-500"><span className={`h-2 w-2 rounded-full ${s.dot}`} />{s.label}</span>))}
-        </div>
-        {considerations.length === 0 ? (
-          <p className="text-sm text-slate-500">Answer a few more steps and relevant considerations will appear here.</p>
-        ) : (
-          <ul className="space-y-2.5" data-testid="considerations-list">
-            {considerations.map((c, i) => {
-              const s = STATUS[c.status];
-              return (
-                <li key={i} className={`flex items-start gap-3 rounded-xl border p-3.5 ${s.cls}`}>
-                  <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${s.dot}`} />
-                  <div><span className="mr-2 inline-block rounded-full border bg-white/70 px-2 py-0.5 text-[11px] font-bold">{s.label}</span><span className="text-sm text-slate-700">{c.text}</span></div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      {/* Next */}
-      <section className="rounded-2xl border border-blue-200 bg-blue-50 p-6">
-        <h3 className="mb-3 flex items-center gap-2 text-lg font-bold text-blue-900"><Icons.Flag className="h-5 w-5" /> What to do next</h3>
-        <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-white p-4">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white"><NextIcon className="h-4 w-4" /></span>
-          <p className="text-sm font-medium text-slate-700">{action.text}</p>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="outline" data-testid="edit-business-btn" onClick={() => setStep(1)}><Icons.Pencil className="mr-1.5 h-4 w-4" /> Edit business info</Button>
-          <Button variant="outline" data-testid="edit-insurance-btn" onClick={() => setStep(5)}><Icons.FileText className="mr-1.5 h-4 w-4" /> Review insurance</Button>
-          <Button data-testid="broker-review-btn" onClick={() => setReviewOpen(true)}><Icons.UserCheck className="mr-1.5 h-4 w-4" /> Request a broker review</Button>
-        </div>
-        <BrokerReviewDialog open={reviewOpen} onOpenChange={setReviewOpen} data={data} engine={engine} />
-      </section>
-
-      <p className="text-xs text-slate-400">This summary provides value even if some questions were skipped. Premiums are indicative estimates from a rule engine and do not confirm or deny any insurance coverage.</p>
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white p-8 text-center print:hidden"><h3 className="text-lg font-bold text-slate-900">Ready to get protected?</h3><p className="text-sm text-slate-500">An ABC Insure partner will review your report and call you with a firm quote.</p><Button data-testid="submit-review-btn-bottom" size="lg" onClick={() => setOpen(true)} className="bg-[#0A1F44] hover:bg-[#13306a]">Submit for review</Button></div>
+      <BrokerReviewDialog open={open} onOpenChange={setOpen} data={data} engine={engine} />
     </div>
   );
 }

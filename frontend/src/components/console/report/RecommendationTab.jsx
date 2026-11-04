@@ -4,96 +4,65 @@ import { toast } from "sonner";
 import { api, errMsg } from "@/lib/api";
 import { useConsole } from "@/context/ConsoleContext";
 import { Panel, BandBadge } from "@/components/console/ui";
-import { inr, fmtDate } from "@/lib/consoleUi";
+import { fmtDate } from "@/lib/consoleUi";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 
 const PRIO = { Essential: "High", Recommended: "Moderate", Optional: "Info" };
 
-const EngineList = ({ recs }) => (
-  <ul className="divide-y divide-slate-100" data-testid="engine-recommendations">
-    {recs.map((r) => (
-      <li key={r.product_id} className="flex items-start gap-3 py-3">
-        <BandBadge band={PRIO[r.priority]}>{r.priority}</BandBadge>
-        <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-slate-900">{r.name}</p><p className="mt-0.5 text-xs text-slate-500">{r.reason}</p>
-          <div className="mt-1.5 flex flex-wrap gap-1">{r.evidence.map((e) => <span key={e} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600">{e}</span>)}</div></div>
-        <div className="shrink-0 text-right"><p className="font-mono text-sm font-bold text-[#0A1F44]">{inr(r.premium_range[0])}–{inr(r.premium_range[1])}</p><p className="text-[10px] text-slate-400">indicative / yr</p></div>
-      </li>
-    ))}
-  </ul>
-);
+const checks = (recs, sel, just, cats) => [
+  ...recs.filter((r) => r.priority === "Essential" && !sel.includes(r.product_id)).map((r) => `${r.name} is rated Essential from the evidence but is not selected`),
+  ...sel.filter((p) => !recs.some((r) => r.product_id === p)).map((p) => `${cats[p]} has no supporting evidence for this business`),
+  ...(just.split(/\s+/).filter(Boolean).length < 12 ? ["The reason is under 12 words, which is too short for the insurer to review"] : []),
+];
 
-const Flags = ({ flags }) => !flags?.length ? <p className="flex items-center gap-2 text-sm text-emerald-700" data-testid="no-flags"><Icons.CheckCircle2 className="h-4 w-4" /> Fully aligned with the evidence-based recommendation.</p> : (
-  <ul className="space-y-2" data-testid="misselling-flags">{flags.map((f, i) => <li key={i} className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-800"><Icons.ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" /><span><b className="uppercase tracking-wide">{f.type.replace("_", " ")}</b> · {f.text}</span></li>)}</ul>
-);
-
-const AgentForm = ({ c, onDone }) => {
-  const { meta, persona } = useConsole();
-  const prev = c.agent_recommendation;
-  const [sel, setSel] = useState(prev?.products || []);
-  const [just, setJust] = useState(prev?.justification || "");
+export const ProposalTab = ({ c, onUpdate }) => {
+  const { persona, meta, money, m } = useConsole();
+  const recs = c.assessment.recommendations;
+  const [sel, setSel] = useState(c.proposal?.products || recs.filter((r) => r.priority !== "Optional").map((r) => r.product_id));
+  const [just, setJust] = useState(c.proposal?.justification || "");
   const [busy, setBusy] = useState(false);
-  const engineIds = Object.fromEntries(c.report.engine_recommendations.map((r) => [r.product_id, r.priority]));
+  const can = ["visited", "info_requested", "proposal_submitted"].includes(c.status);
+  const adv = checks(recs, sel, just, meta.categories);
+  const total = recs.filter((r) => sel.includes(r.product_id)).reduce((s, r) => s + r.premium, 0);
   const submit = async () => {
     setBusy(true);
-    try { const { data } = await api.post(`/cases/${c.id}/recommendation`, { products: sel, justification: just, actor: persona.name }); onDone(data); toast.success(`Recommendation sent to Zurich · ${data.flags.length} flag(s)`); }
-    catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+    try { const { data } = await api.post(`/cases/${c.id}/proposal`, { products: sel, justification: just, actor: persona.name }); onUpdate(data); toast.success("Proposal submitted to the insurer"); } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
   return (
-    <div className="space-y-4" data-testid="agent-recommendation-form">
-      <div className="grid gap-2 sm:grid-cols-2">
-        {Object.entries(meta.catalog).map(([id, p]) => (
-          <label key={id} className={`flex cursor-pointer items-start gap-2.5 rounded-md border p-2.5 transition-colors ${sel.includes(id) ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-slate-300"}`}>
-            <Checkbox data-testid={`rec-product-${id}`} checked={sel.includes(id)} onCheckedChange={() => setSel((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id])} className="mt-0.5" />
-            <span className="min-w-0"><span className="block text-xs font-semibold text-slate-900">{p.name}</span><span className="block text-[11px] text-slate-500">{engineIds[id] ? `Engine: ${engineIds[id]}` : "Not suggested by the engine"}</span></span>
-          </label>
-        ))}
-      </div>
-      <Textarea data-testid="rec-justification" value={just} onChange={(e) => setJust(e.target.value)} rows={4} placeholder="Explain why these products fit this SME, based on what you saw on site. The insurer will review this." />
-      <div className="flex items-center justify-between"><span className="font-mono text-[11px] text-slate-400">{just.split(/\s+/).filter(Boolean).length} words · at least 12 recommended</span>
-        <Button data-testid="rec-submit-btn" disabled={busy || !sel.length} onClick={submit} className="bg-[#0A1F44] hover:bg-[#13306a]"><Icons.Send className="mr-1.5 h-4 w-4" />{prev ? "Resubmit to Zurich" : "Submit to Zurich"}</Button></div>
-    </div>
-  );
-};
-
-const Review = ({ c, onDone }) => {
-  const [comment, setComment] = useState("");
-  const act = async (decision) => {
-    try { const { data } = await api.post(`/cases/${c.id}/review`, { decision, comment }); onDone(data); toast.success("Decision recorded"); setComment(""); } catch (e) { toast.error(errMsg(e)); }
-  };
-  return (
-    <div className="space-y-3" data-testid="insurer-review">
-      <Textarea data-testid="review-comment" value={comment} onChange={(e) => setComment(e.target.value)} rows={3} placeholder="Comment for the distributor (required when asking for justification)" />
-      <div className="flex flex-wrap gap-2">
-        <Button data-testid="review-approve-btn" onClick={() => act("approve")} className="bg-emerald-600 hover:bg-emerald-700"><Icons.Check className="mr-1.5 h-4 w-4" /> Approve for quote</Button>
-        <Button data-testid="review-justify-btn" variant="outline" disabled={!comment.trim()} onClick={() => act("request_justification")} className="border-rose-300 text-rose-700 hover:bg-rose-50"><Icons.MessageSquareWarning className="mr-1.5 h-4 w-4" /> Request justification</Button>
-        <Button data-testid="review-decline-btn" variant="ghost" onClick={() => act("decline")} className="text-slate-500">Decline</Button>
-      </div>
-    </div>
-  );
-};
-
-export const RecommendationTab = ({ c, onUpdate }) => {
-  const { persona, meta } = useConsole();
-  const rec = c.agent_recommendation;
-  const canRecommend = persona.role !== "insurer" && ["inspected", "recommendation_submitted", "justification_requested"].includes(c.status);
-  const canReview = persona.role === "insurer" && rec && c.status === "recommendation_submitted";
-  return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <Panel title="Engine recommendation · evidence-based" icon={Icons.Cpu}><EngineList recs={c.report.engine_recommendations} /></Panel>
-      <div className="space-y-6">
-        {rec && (
-          <Panel title={`Agent recommendation · ${rec.agent}`} icon={Icons.UserCheck} testid="agent-recommendation" action={<span className="text-[11px] text-slate-400">{fmtDate(rec.submitted_at)}</span>}>
-            <div className="flex flex-wrap gap-1.5">{rec.products.map((p) => <span key={p} className="rounded-md bg-[#0A1F44] px-2 py-1 text-[11px] font-medium text-white">{meta.catalog[p]?.name}</span>)}</div>
-            <blockquote className="mt-3 border-l-2 border-slate-300 pl-3 text-sm italic text-slate-600">"{rec.justification}"</blockquote>
-            <div className="mt-4"><Flags flags={c.flags} /></div>
+    <div className="grid gap-6 lg:grid-cols-5">
+      <Panel title={`Suggested ${m.insurer} cover`} icon={Icons.ShieldCheck} className="lg:col-span-3" testid="suggested-cover">
+        <ul className="divide-y divide-slate-100">{recs.map((r) => (
+          <li key={r.product_id} className="flex items-start gap-3 py-3.5">
+            <Checkbox data-testid={`proposal-product-${r.product_id}`} disabled={!can} checked={sel.includes(r.product_id)} onCheckedChange={() => setSel((s) => s.includes(r.product_id) ? s.filter((x) => x !== r.product_id) : [...s, r.product_id])} className="mt-1" />
+            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold text-slate-900">{r.name}</p><BandBadge band={PRIO[r.priority]}>{r.priority}</BandBadge></div>
+              <p className="mt-0.5 text-xs text-slate-500">{r.reason}</p><p className="mt-1 text-[11px] text-slate-400">Sum insured {money(r.sum_insured)}</p></div>
+            <div className="shrink-0 text-right"><p className="font-mono text-sm font-bold text-[#0A1F44]">{money(r.premium_range[0])} – {money(r.premium_range[1])}</p><p className="text-[10px] text-slate-400">indicative a year</p></div>
+          </li>))}</ul>
+        <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3"><span className="text-xs text-slate-600">{sel.length} covers selected</span><span className="font-mono text-base font-bold">{money(total)} <span className="text-[10px] font-normal text-slate-400">indicative premium</span></span></div>
+      </Panel>
+      <div className="space-y-6 lg:col-span-2">
+        {c.decision && <div data-testid="insurer-decision" className={`rounded-xl border p-4 text-sm ${c.decision.decision === "approve" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : c.decision.decision === "decline" ? "border-slate-200 bg-slate-50 text-slate-700" : "border-rose-200 bg-rose-50 text-rose-800"}`}>
+          <p className="flex items-center gap-2 font-semibold"><Icons.Building2 className="h-4 w-4" />{c.decision.by} · {c.decision.decision === "approve" ? "Quote issued" : c.decision.decision === "decline" ? "Declined" : "More information requested"}</p>
+          <p className="mt-1">{c.decision.comment}</p><p className="mt-2 font-mono text-[10px] opacity-70">Received via {c.decision.via} · {fmtDate(c.decision.at)}</p></div>}
+        {can ? (
+          <Panel title={c.proposal ? "Revise and resubmit" : "Your proposal"} icon={Icons.PenLine} testid="proposal-form">
+            <Textarea data-testid="proposal-reason" value={just} onChange={(e) => setJust(e.target.value)} rows={5} placeholder="Why do these covers fit this client? Refer to what you saw on site." />
+            <div className="mt-3 space-y-1.5" data-testid="advisory-checks">
+              {adv.length === 0 ? <p className="flex items-center gap-1.5 text-xs text-emerald-700"><Icons.CheckCircle2 className="h-4 w-4" />All advisory checks passed</p>
+                : adv.map((a) => <p key={a} className="flex items-start gap-1.5 rounded-md bg-amber-50 px-2.5 py-2 text-xs text-amber-800"><Icons.AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{a}</p>)}
+            </div>
+            <Button data-testid="proposal-submit" disabled={busy || !sel.length} onClick={submit} className="mt-4 w-full bg-[#0A1F44] hover:bg-[#13306a]"><Icons.Send className="mr-1.5 h-4 w-4" />{c.proposal ? "Resubmit to insurer" : "Submit to insurer"}</Button>
           </Panel>
-        )}
-        {c.review && <div data-testid="review-outcome" className={`rounded-lg border p-4 text-sm ${c.review.decision === "approve" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-rose-200 bg-rose-50 text-rose-800"}`}><p className="font-semibold">{c.review.by} · {c.review.decision.replace("_", " ")}</p>{c.review.comment && <p className="mt-1">{c.review.comment}</p>}</div>}
-        {canReview && <Panel title="Insurer decision" icon={Icons.Gavel}><Review c={c} onDone={onUpdate} /></Panel>}
-        {canRecommend && <Panel title={rec ? "Revise recommendation" : "Submit your recommendation"} icon={Icons.PenLine}><AgentForm c={c} onDone={onUpdate} /></Panel>}
-        {!rec && !canRecommend && <Panel><p className="text-sm text-slate-500" data-testid="recommendation-waiting">{persona.role === "insurer" ? "Waiting for the assigned agent to inspect the site and submit a recommendation." : "Complete the site inspection (Schedule inspection → Mark inspected) to unlock your recommendation."}</p></Panel>}
+        ) : c.proposal ? (
+          <Panel title={`Proposal by ${c.proposal.by}`} icon={Icons.FileCheck2} testid="proposal-submitted" action={<span className="text-[11px] text-slate-400">{fmtDate(c.proposal.submitted_at)}</span>}>
+            <div className="flex flex-wrap gap-1.5">{c.proposal.products.map((p) => <span key={p} className="rounded-md bg-[#0A1F44] px-2 py-1 text-[11px] font-medium text-white">{m.catalog[p]}</span>)}</div>
+            <blockquote className="mt-3 border-l-2 border-slate-300 pl-3 text-sm italic text-slate-600">{c.proposal.justification}</blockquote>
+            <p className="mt-3 font-mono text-sm font-bold">{money(c.proposal.premium)} <span className="text-[10px] font-normal text-slate-400">indicative premium</span></p>
+            {c.flags?.length > 0 && <div className="mt-3 space-y-1.5">{c.flags.map((f, i) => <p key={i} className="rounded-md bg-amber-50 px-2.5 py-2 text-xs text-amber-800">{f.text}</p>)}</div>}
+          </Panel>
+        ) : <Panel><p className="text-sm text-slate-500" data-testid="proposal-locked">Complete the site visit to unlock the proposal.</p></Panel>}
       </div>
     </div>
   );
