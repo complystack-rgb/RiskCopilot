@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "@/lib/api";
+import { getMarket } from "@/data/markets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -23,7 +24,8 @@ export const BrokerReviewDialog = ({ open, onOpenChange, data, engine }) => {
     setBusy(true);
     try {
       const assessment = { overall: engine.exposure.overall, areas: engine.exposure.areas.map(({ id, label, score, level }) => ({ id, label, score, level })), narrative: engine.narrative.narrative };
-      const { data: r } = await api.post("/cases", { journey: data, assessment, email: contact.email, phone: contact.phone });
+      const registration = getMarket(data.market).idFields.map((f) => ({ label: f.label, value: data.regIds?.[f.key] || "" }));
+      const { data: r } = await api.post("/cases", { journey: { ...data, registration }, assessment, email: contact.email, phone: contact.phone });
       const saved = { ...r, business: data.businessName };
       localStorage.setItem(KEY, JSON.stringify(saved)); setDone(saved); toast.success("Submitted for review");
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
@@ -50,7 +52,7 @@ export const BrokerReviewDialog = ({ open, onOpenChange, data, engine }) => {
             <div className="space-y-3">
               <Input data-testid="contact-email-input" type="email" placeholder="Work email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} />
               <Input data-testid="contact-phone-input" placeholder="Mobile number" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} />
-              <Button data-testid="broker-review-submit" disabled={busy || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contact.email) || contact.phone.replace(/\D/g, "").length < 10} onClick={submit} className="w-full">{busy ? <Icons.Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Icons.Send className="mr-1.5 h-4 w-4" />}Submit</Button>
+              <Button data-testid="broker-review-submit" disabled={busy || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contact.email) || contact.phone.replace(/\D/g, "").length < 8} onClick={submit} className="w-full">{busy ? <Icons.Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Icons.Send className="mr-1.5 h-4 w-4" />}Submit</Button>
               <p className="text-[11px] text-slate-400">Only your assigned partner and ABC Insure can see your details.</p>
             </div>
           </>

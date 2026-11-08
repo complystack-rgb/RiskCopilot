@@ -35,7 +35,7 @@ export const SummaryTab = ({ c, onUpdate, onEvidence }) => {
           <ul className="space-y-2">{c.checklist.map((t, i) => <li key={i} className="flex items-start gap-2.5 text-sm"><Checkbox data-testid={`checklist-${i}`} checked={c.checklist_done.includes(i)} onCheckedChange={() => toggle(i)} className="mt-0.5" /><span className={c.checklist_done.includes(i) ? "text-slate-400 line-through" : "text-slate-700"}>{t}</span></li>)}</ul>
           <p className="mt-3 font-mono text-[11px] text-slate-400">{c.checklist_done.length}/{c.checklist.length} verified</p>
         </Panel>
-        <Panel title="Client contact" icon={Icons.Contact}><dl className="space-y-1.5 text-xs">{[["Contact", c.sme.contact_name], ["Phone", c.sme.phone], ["Email", c.sme.email], ["Employees", c.sme.employees], ["Annual revenue", money(c.sme.revenue)]].map(([k, v]) => <div key={k} className="flex justify-between gap-3"><dt className="text-slate-500">{k}</dt><dd className="truncate font-medium text-slate-900">{v}</dd></div>)}</dl></Panel>
+        <Panel title="Client contact" icon={Icons.Contact}><dl className="space-y-1.5 text-xs">{[["Contact", c.sme.contact_name], ["Phone", c.sme.phone], ["Email", c.sme.email], ["Employees", c.sme.employees], ["Annual revenue", money(c.sme.revenue)], ...(c.sme.registration || []).map((r) => [r.label, r.value || "Not given"])].map(([k, v]) => <div key={k} className="flex justify-between gap-3"><dt className="text-slate-500">{k}</dt><dd className="truncate font-medium text-slate-900">{v}</dd></div>)}</dl></Panel>
       </div>
     </div>
   );

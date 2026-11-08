@@ -5,6 +5,7 @@
 
 import { ZURICH_PRODUCTS } from "@/data/zurichProducts";
 import { categoryLabel } from "@/lib/summary";
+import { getMarket, money, toINR, revenueMidINR } from "@/data/markets";
 
 const REVENUE_MID = {
   "₹50 lakh to ₹1 crore": 7500000,
@@ -45,7 +46,8 @@ const band = (s) => (s >= 75 ? "High" : s >= 55 ? "Elevated" : s >= 30 ? "Modera
 const clamp = (n) => Math.max(0, Math.min(100, Math.round(n)));
 
 function deriveInputs(d) {
-  const turnover = d.revenueExact ? Number(d.revenueExact) : (REVENUE_MID[d.revenueBand] || 15000000);
+  const m = getMarket(d.market);
+  const turnover = d.revenueExact ? toINR(d.revenueExact, m) : (revenueMidINR(d.revenueBand, m) || REVENUE_MID[d.revenueBand] || 15000000);
   const employees = HEADCOUNT_MID[d.headcount] ?? 4;
   const vehicles = (d.priorities?.includes("vehicles") || d.category === "transport")
     ? Math.max(2, Math.min(20, Math.round(employees / 4))) : 0;
@@ -122,7 +124,7 @@ function quoteFor(product, d) {
   if (r.perVehicle) base += (vehicles || 2) * r.perVehicle;
 
   const drivers = [];
-  if (r.turnoverRate) drivers.push(`Turnover ${fmtINR(turnover)}`);
+  if (r.turnoverRate) drivers.push(`Turnover ${money(turnover, getMarket(d.market))}`);
   if (r.perEmployee) drivers.push(`${employees} employee(s)`);
   if (r.perVehicle) drivers.push(`${vehicles || 2} vehicle(s)`);
 
@@ -191,7 +193,7 @@ export function buildNarrative(d, exposure, recs) {
   const ranked = [...exposure.areas].sort((a, b) => b.score - a.score);
   if (d.revenueBand || d.headcount) {
     const topTwo = ranked.slice(0, 2).map((a) => `${a.label.toLowerCase()} (${a.level})`).join(" and ");
-    lines.push(`With an estimated turnover around ${fmtINR(turnover)} and roughly ${employees} people, your size feeds directly into the scores, your highest-scoring areas are ${topTwo}.`);
+    lines.push(`With turnover around ${money(turnover, getMarket(d.market))} and about ${employees} people, your highest scoring areas are ${topTwo}.`);
   }
 
   const hi = ranked[0];

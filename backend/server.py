@@ -228,11 +228,16 @@ async def create_case(body: SmeSubmit):
     j = body.journey
     if not j.get("businessName"):
         raise HTTPException(400, "Business name is required")
+    market = j.get("market") if j.get("market") in MARKETS else "IN"
     act = (j.get("activity") or j.get("category") or "").lower()
     key = "in1" if "textile" in act or "weav" in act else "in5" if "garment" in act or "apparel" in act else "in2" if "food" in act or "hospitality" in act else \
           "in4" if "pharma" in act or "health" in act else "in6" if "logistic" in act or "transport" in act or "wholesale" in act else "in3"
-    hero = list(next(h for h in HEROES if h[0] == key))
-    hero[2] = REGION.get(j.get("state"), "org-bharat")
+    if market == "IN":
+        hero = list(next(h for h in HEROES if h[0] == key))
+        hero[2] = REGION.get(j.get("state"), "org-bharat")
+    else:
+        pool = [h for h in HEROES if h[1] == market]
+        hero = list(next((h for h in pool if any(w in h[6].lower() for w in act.split() if len(w) > 3)), pool[0]))
     hero[3], hero[4], hero[5] = j["businessName"], j.get("city") or hero[4], j.get("state") or hero[5]
     hero[6] = j.get("activity") or {"manufacturing": "Manufacturing", "retail": "Retail", "wholesale": "Wholesale and distribution", "it": "IT services", "hospitality": "Hospitality and food services",
                                     "healthcare": "Healthcare", "transport": "Transport and logistics"}.get(j.get("category"), (j.get("category") or hero[6]).title())
@@ -246,11 +251,12 @@ async def create_case(body: SmeSubmit):
     hero[13] = "new"
     if j.get("hasInsurance") != "Yes":
         hero[12] = None
-    ctr = await db.counters.find_one_and_update({"_id": "lead-IN"}, {"$inc": {"n": 1}}, upsert=True, return_document=True)
+    ctr = await db.counters.find_one_and_update({"_id": f"lead-{market}"}, {"$inc": {"n": 1}}, upsert=True, return_document=True)
     agents = await db.agents.find({"active": True}, NO_ID).to_list(500)
     c = build_case(tuple(hero), ctr["n"], random.Random(), agents, created=datetime.now(timezone.utc))
     c["source"] = "sme_journey"
-    c["sme"].update({"email": body.email, "phone": body.phone, "contact_name": j.get("contactName") or c["sme"]["contact_name"]})
+    c["sme"].update({"email": body.email, "phone": body.phone, "contact_name": j.get("contactName") or c["sme"]["contact_name"],
+                     "registration": [{"label": str(r.get("label", ""))[:80], "value": str(r.get("value", ""))[:60]} for r in (j.get("registration") or [])[:5] if isinstance(r, dict)]})
     if j.get("lat") and j.get("lon"):
         c["sme"].update({"lat": j["lat"], "lon": j["lon"], "address": j.get("address") or c["sme"]["address"]})
     c["sme_answers"] = {k: j.get(k) for k in ("category", "activity", "headcount", "revenueBand", "priorities", "premisesOwnership", "hasInsurance")}

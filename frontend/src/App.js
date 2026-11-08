@@ -1,5 +1,5 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { JourneyProvider } from "@/context/JourneyContext";
 import Journey from "@/pages/Journey";
@@ -17,8 +17,8 @@ function App() {
       <JourneyProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/quote" element={<Journey />} />
+            <Route path="/" element={<Navigate to="/in" replace />} />
+            <Route path="/quote" element={<Navigate to="/in/quote" replace />} />
             <Route path="/console" element={<ConsoleLayout />}>
               <Route index element={<Overview />} />
               <Route path="cases" element={<Cases />} />
@@ -26,6 +26,8 @@ function App() {
               <Route path="team" element={<Team />} />
               <Route path="developers" element={<DeveloperPortal />} />
             </Route>
+            <Route path="/:market" element={<Landing />} />
+            <Route path="/:market/quote" element={<Journey />} />
           </Routes>
         </BrowserRouter>
         <Toaster position="bottom-right" richColors />

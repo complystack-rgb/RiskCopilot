@@ -4,7 +4,7 @@ const STORAGE_KEY = "complystack_journey_v1";
 
 const DEFAULT_DATA = {
   // Step 1
-  businessName: "", category: "", activity: "", startYear: "", yearNotSure: false,
+  market: "IN", regIds: {}, businessName: "", category: "", activity: "", startYear: "", yearNotSure: false,
   country: "India", state: "", city: "", pin: "", address: "", addressLater: false, lat: null, lon: null,
   // Step 2
   headcount: "", payrollBand: "", payrollExact: "", revenueBand: "", revenueExact: "",

@@ -5,12 +5,12 @@ import { priorityTitle } from "@/lib/summary";
 import { Textarea } from "@/components/ui/textarea";
 
 const WHY = {
-  premises: "Damage to the space you operate from can halt everything else, it's often the single largest exposure.",
-  machinery: "If critical equipment fails or is damaged, production and income can stop even if everything else is intact.",
+  premises: "Damage to your premises can halt the whole business. This is often the largest exposure.",
+  machinery: "If critical equipment fails or is damaged, production and income can stop.",
   stock: "Inventory and raw materials tie up capital and can be destroyed, spoiled or stolen.",
   assets: "Computers, tools and furniture are easy to overlook but costly to replace all at once.",
-  continuity: "If revenue stops while rent, salaries and loans continue, the gap can be more damaging than the physical loss.",
-  employees: "Employing people creates obligations, from workplace injury to statutory cover.",
+  continuity: "Rent, salaries and loans continue even when revenue stops.",
+  employees: "Employing people creates obligations such as workplace injury and statutory cover.",
   thirdparty: "Your activities can create liability to customers, suppliers and the public.",
   vehicles: "Vehicles and goods in transit face risks on the road that premises cover usually excludes.",
 };
@@ -29,7 +29,7 @@ export default function Step3Priorities() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader title="What would be hardest for your business to lose?" lead="Select all that apply." />
+      <SectionHeader title="What Would Be Hardest to Lose?" lead="Select all that apply." />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {PRIORITIES.map((p) => (
@@ -50,12 +50,12 @@ export default function Step3Priorities() {
         <div className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
           <p className="text-sm font-medium text-blue-900">Answer two quick questions instead.</p>
           <div>
-            <FieldLabel>1. What assets or resources would be hardest to replace?</FieldLabel>
-            <Textarea data-testid="notsure-assets" value={data.notSureAssets} onChange={(e) => update({ notSureAssets: e.target.value })} placeholder="e.g. our main oven, our customer records..." />
+            <FieldLabel>Hardest Asset to Replace</FieldLabel>
+            <Textarea data-testid="notsure-assets" value={data.notSureAssets} onChange={(e) => update({ notSureAssets: e.target.value })} placeholder="Our main oven, our customer records" />
           </div>
           <div>
-            <FieldLabel>2. What disruption would make it hardest to keep the business running?</FieldLabel>
-            <Textarea data-testid="notsure-disruption" value={data.notSureDisruption} onChange={(e) => update({ notSureDisruption: e.target.value })} placeholder="e.g. losing our premises, a key supplier failing..." />
+            <FieldLabel>Biggest Disruption Risk</FieldLabel>
+            <Textarea data-testid="notsure-disruption" value={data.notSureDisruption} onChange={(e) => update({ notSureDisruption: e.target.value })} placeholder="Losing our premises, a key supplier failing" />
           </div>
         </div>
       )}
@@ -65,7 +65,7 @@ export default function Step3Priorities() {
       </WhyThisMatters>
 
       {selected.filter((p) => p !== "notsure").length > 0 && (
-        <RewardCard title="Protection priorities (preliminary)" testid="reward-priorities">
+        <RewardCard title="Your Priorities" testid="reward-priorities">
           <ul className="space-y-2.5">
             {selected.filter((p) => p !== "notsure").map((id) => (
               <li key={id} className="rounded-lg border border-slate-200 bg-white p-3">
@@ -74,7 +74,7 @@ export default function Step3Priorities() {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-amber-700">Preliminary only, this is not a final insurance recommendation.</p>
+          <p className="mt-3 text-xs text-amber-700">Your partner will confirm the right cover.</p>
         </RewardCard>
       )}
     </div>

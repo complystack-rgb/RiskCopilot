@@ -5,6 +5,7 @@ import { categoryLabel } from "@/lib/summary";
 import { Button } from "@/components/ui/button";
 import * as Icons from "lucide-react";
 import { BrokerReviewDialog } from "./BrokerReviewDialog";
+import { getMarket, money } from "@/data/markets";
 
 const PHASES = ["Reviewing your business profile", "Mapping the risks that apply to your sector", "Comparing your current cover with your needs", "Selecting the right cover and indicative prices"];
 const PEERS = {
@@ -39,6 +40,7 @@ export default function ProtectionReport() {
   const peers = PEERS[data.category] || PEERS.default;
   const ov = engine.exposure.overall;
   const maxGap = gaps.reduce((s, r) => s + r.quote.max, 0);
+  const m = getMarket(data.market);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500" data-testid="protection-report">
@@ -57,7 +59,7 @@ export default function ProtectionReport() {
             <div className="flex items-start justify-between gap-3"><div><p className="text-base font-semibold text-slate-900">{r.product.name}</p><p className="mt-0.5 text-sm text-slate-500">{r.product.tagline}</p></div>
               <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${r.isGap ? "bg-rose-50 text-rose-700" : r.status === "Already indicated" ? "bg-slate-100 text-slate-600" : "bg-blue-50 text-blue-700"}`}>{r.isGap ? "Not covered today" : r.status}</span></div>
             {r.reasonLines?.[0] && <p className="mt-3 text-sm text-slate-600">{r.reasonLines[0]}</p>}
-            <div className="mt-auto flex items-end justify-between border-t border-slate-100 pt-4"><span className="text-xs text-slate-400">Indicative annual premium</span><span className="font-mono text-lg font-semibold text-[#0A1F44]">₹{r.quote.min.toLocaleString("en-IN")} to ₹{r.quote.max.toLocaleString("en-IN")}</span></div>
+            <div className="mt-auto flex items-end justify-between border-t border-slate-100 pt-4"><span className="text-xs text-slate-400">Indicative annual premium</span><span className="font-mono text-lg font-semibold text-[#0A1F44]">{money(r.quote.min, m)} to {money(r.quote.max, m)}</span></div>
           </div>))}</div>
       </Section>
 
@@ -73,7 +75,7 @@ export default function ProtectionReport() {
       <Section title="What you may not know" testid="insights">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-xl border border-rose-200 bg-rose-50 p-5"><Icons.ShieldOff className="h-5 w-5 text-rose-600" /><p className="mt-3 text-3xl font-semibold text-rose-700">{gaps.length}</p><p className="text-sm font-semibold text-rose-800">risks with no cover today</p>
-            <p className="mt-2 text-xs text-rose-700">{gaps.length ? `${gaps.map((g) => g.product.name).slice(0, 3).join(", ")}. Protecting these costs about ₹${maxGap.toLocaleString("en-IN")} a year at most.` : "Your current cover addresses the main risks we found."}</p></div>
+            <p className="mt-2 text-xs text-rose-700">{gaps.length ? `${gaps.map((g) => g.product.name).slice(0, 3).join(", ")}. Protecting these costs about ${money(maxGap, m)} a year at most.` : "Your current cover addresses the main risks we found."}</p></div>
           <div className="rounded-xl border border-slate-200 bg-white p-5"><Icons.Users className="h-5 w-5 text-blue-600" /><p className="mt-3 text-sm font-semibold text-slate-900">How similar businesses are covered</p>
             <ul className="mt-3 space-y-2">{peers.covered.map(([k, v]) => <li key={k} className="text-xs"><div className="flex justify-between"><span className="text-slate-600">{k}</span><span className="font-mono font-semibold">{v}%</span></div><div className="mt-1 h-1.5 rounded bg-slate-100"><div className="h-full rounded bg-blue-600" style={{ width: `${v}%` }} /></div></li>)}</ul></div>
           <div className="rounded-xl border border-slate-200 bg-white p-5"><Icons.Flame className="h-5 w-5 text-orange-600" /><p className="mt-3 text-sm font-semibold text-slate-900">Most common claims in your sector</p>
