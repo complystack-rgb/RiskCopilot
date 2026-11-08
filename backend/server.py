@@ -463,14 +463,9 @@ async def geo_reverse(lat: float, lon: float):
         raise HTTPException(502, "Reverse geocoding unavailable")
 
 
-@api.post("/console/reset-demo")
-async def reset_demo():
-    await seed(db, force=True)
-    return {"ok": True}
-
-
 app.include_router(api)
-app.add_middleware(CORSMiddleware, allow_credentials=True, allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','), allow_methods=["*"], allow_headers=["*"])
+_cors_origins = [o.strip() for o in os.environ.get('CORS_ORIGINS', 'https://app.riskcopilot.complystack.io').split(',') if o.strip()]
+app.add_middleware(CORSMiddleware, allow_credentials=True, allow_origins=_cors_origins, allow_methods=["*"], allow_headers=["*"])
 logging.basicConfig(level=logging.INFO)
 
 

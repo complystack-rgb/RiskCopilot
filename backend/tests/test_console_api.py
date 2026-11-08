@@ -10,8 +10,6 @@ KEY = "cs_demo_zurich_7f3a91c2"
 
 @pytest.fixture(scope="module")
 def s():
-    r = requests.post(f"{API}/console/reset-demo")
-    assert r.status_code == 200
     ss = requests.Session()
     yield ss
 

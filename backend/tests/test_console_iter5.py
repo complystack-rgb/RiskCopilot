@@ -11,7 +11,6 @@ J = {"businessName": "TEST_Iter5 Mills", "category": "manufacturing", "activity"
 
 @pytest.fixture(scope="module")
 def s():
-    assert requests.post(f"{API}/console/reset-demo").status_code == 200
     return requests.Session()
 
 
@@ -27,13 +26,6 @@ def test_lead_sequential(s, case):
     assert case["lead_id"] == "ZIN-FIRE-26013"
     r2 = s.post(f"{API}/cases", json={"journey": J}).json()
     assert r2["lead_id"] == "ZIN-FIRE-26014"
-
-
-def test_reset_clears_cyber_and_counter(s):
-    s.post(f"{API}/cyber/scan", json={"url": "www.petronas.com", "country": "MY"}, timeout=60)
-    assert s.post(f"{API}/console/reset-demo").status_code == 200
-    assert s.get(f"{API}/cyber/scans").json() == []
-    assert len(s.get(f"{API}/cases").json()) == 12
 
 
 # search

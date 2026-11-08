@@ -1,5 +1,5 @@
 """Market config, product catalogs and hero demo cases (all values in local currency)."""
-_P = "https://static.prod-images.emergentagent.com/jobs/5dc50078-ad32-4b63-af18-d9da1346a3a3/images/"
+_P = "/images/heroes/"
 _H = {
     "in1": ["109b7066525d466935868bfd5b6f865685c26929fef7f12843040576c1e45086", "a21d25dd250175312e9c2d6d13ec4997969be5d8ca42f91876da5ad73c81e5b7", "0f8bcd8382f8173f712c8edac22b51741f6b811355b10f0f27db53b96ee54020"],
     "in2": ["8cc066439c5dbc2e7e8a424e68e75d8c3728fc9806b13001a22b930fea1115e9", "2ce0f542ae8acde9b052d3dc1207025bc3c65171003cf6f6be9c5c16bcd4fec6", "efbd9a2bbf7c0c2dc2e57696a88fed911f08911ea45fd44c3355ad45a5d2e5f6"],
