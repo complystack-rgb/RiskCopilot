@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Header
+from fastapi import FastAPI, APIRouter, HTTPException, Header, Depends
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -32,6 +32,49 @@ FLOW = {"new": {"contacted", "lost"}, "contacted": {"visit_scheduled", "lost"}, 
         "proposal_submitted": {"lost"}, "info_requested": {"lost"}, "quoted": {"bound", "lost"}}
 PROPOSABLE = {"visited", "info_requested", "proposal_submitted"}
 REGION = {"Tamil Nadu": "org-kavach", "Karnataka": "org-kavach", "Kerala": "org-kavach", "Madhya Pradesh": "org-kavach", "Andhra Pradesh": "org-kavach", "Telangana": "org-kavach"}
+
+
+import hmac as _hmac
+import hashlib as _hashlib
+import secrets as _secrets
+import time as _time
+
+AUTH_ALLOWED_EMAILS = {"jay@complystack.io"}
+_AUTH_SECRET = os.environ.get("AUTH_SECRET") or _secrets.token_hex(32)
+SESSION_SECONDS = 12 * 3600
+
+
+def _auth_sign(payload):
+    return _hmac.new(_AUTH_SECRET.encode(), payload.encode(), _hashlib.sha256).hexdigest()
+
+
+def _auth_make_token(email):
+    payload = f"{email}|{int(_time.time()) + SESSION_SECONDS}"
+    return f"{payload}.{_auth_sign(payload)}"
+
+
+def _auth_check_token(token):
+    if not token or "." not in token:
+        return None
+    payload, sig = token.rsplit(".", 1)
+    if not _hmac.compare_digest(sig, _auth_sign(payload)):
+        return None
+    email, _, exp = payload.partition("|")
+    if not exp.isdigit() or int(exp) < _time.time():
+        return None
+    return email
+
+
+def require_session(authorization: Optional[str] = Header(None)):
+    token = authorization[7:] if authorization and authorization.startswith("Bearer ") else None
+    email = _auth_check_token(token)
+    if not email:
+        raise HTTPException(401, "Sign in required")
+    return email
+
+
+class LoginIn(BaseModel):
+    email: str
 
 
 def iso():
@@ -123,7 +166,20 @@ async def root():
     return {"service": "ComplyStack", "status": "ok"}
 
 
-@api.get("/console/meta")
+@api.post("/auth/login")
+async def auth_login(body: LoginIn):
+    email = body.email.strip().lower()
+    if email not in AUTH_ALLOWED_EMAILS:
+        raise HTTPException(403, "This email is not authorised for console access")
+    return {"token": _auth_make_token(email), "email": email, "expires_in": SESSION_SECONDS}
+
+
+@api.get("/auth/me")
+async def auth_me(user: str = Depends(require_session)):
+    return {"email": user}
+
+
+@api.get("/console/meta", dependencies=[Depends(require_session)])
 async def meta():
     return {"markets": MARKETS, "categories": CATEGORIES, "orgs": await db.orgs.find({}, NO_ID).to_list(100), "agents": await db.agents.find({}, NO_ID).to_list(500)}
 
@@ -137,7 +193,7 @@ def scope(market, org_id=None, agent_id=None):
     return q
 
 
-@api.get("/console/stats")
+@api.get("/console/stats", dependencies=[Depends(require_session)])
 async def stats(market: str, org_id: Optional[str] = None, agent_id: Optional[str] = None):
     cs = await db.cases.find(scope(market, org_id, agent_id), {"_id": 0, "photos": 0, "video": 0, "activity": 0}).to_list(3000)
     t = datetime.now(timezone.utc)
@@ -214,7 +270,7 @@ LIST_PROJ = {"_id": 0, "id": 1, "lead_id": 1, "market": 1, "created_at": 1, "upd
              "assessment.risk_score": 1, "assessment.risk_band": 1, "assessment.protection_gap": 1, "assessment.total_insurable": 1, "assessment.gaps": 1, "proposal": 1, "decision": 1, "image_key": 1}
 
 
-@api.get("/cases")
+@api.get("/cases", dependencies=[Depends(require_session)])
 async def list_cases(market: str, org_id: Optional[str] = None, agent_id: Optional[str] = None, status: Optional[str] = None, band: Optional[str] = None,
                      category: Optional[str] = None, q: Optional[str] = None):
     query = scope(market, org_id, agent_id)
@@ -281,7 +337,7 @@ async def create_case(body: SmeSubmit):
     return {"lead_id": c["lead_id"], "case_id": c["id"], "distributor": org["name"], "agent": agent["name"], "sla_due": c["sla_due"]}
 
 
-@api.post("/cases/{cid}/assign")
+@api.post("/cases/{cid}/assign", dependencies=[Depends(require_session)])
 async def assign(cid: str, body: AssignIn):
     c = await get_case(cid)
     if c["status"] in CLOSED:
@@ -295,7 +351,7 @@ async def assign(cid: str, body: AssignIn):
 LABELS = {"contacted": "Client contacted", "visit_scheduled": "Site visit scheduled", "visited": "Site visit completed", "bound": "Policy bound", "lost": "Marked as lost"}
 
 
-@api.post("/cases/{cid}/status")
+@api.post("/cases/{cid}/status", dependencies=[Depends(require_session)])
 async def set_status(cid: str, body: StatusIn):
     c = await get_case(cid)
     if body.status not in FLOW.get(c["status"], set()):
@@ -303,20 +359,20 @@ async def set_status(cid: str, body: StatusIn):
     return await push(c["id"], {"$set": {"status": body.status}}, ev(body.actor, body.status, body.note or LABELS[body.status], datetime.now(timezone.utc)))
 
 
-@api.post("/cases/{cid}/notes")
+@api.post("/cases/{cid}/notes", dependencies=[Depends(require_session)])
 async def add_note(cid: str, body: NoteIn):
     c = await get_case(cid)
     return await push(c["id"], {}, ev(body.actor, "note", body.text, datetime.now(timezone.utc)))
 
 
-@api.post("/cases/{cid}/checklist")
+@api.post("/cases/{cid}/checklist", dependencies=[Depends(require_session)])
 async def checklist(cid: str, body: CheckIn):
     c = await get_case(cid)
     done = sorted({i for i in body.done if 0 <= i < len(c["checklist"])})
     return await push(c["id"], {"$set": {"checklist_done": done}}, ev(body.actor, "checklist", f"Site checklist {len(done)}/{len(c['checklist'])} verified", datetime.now(timezone.utc)))
 
 
-@api.post("/cases/{cid}/proposal")
+@api.post("/cases/{cid}/proposal", dependencies=[Depends(require_session)])
 async def proposal(cid: str, body: ProposalIn):
     c = await get_case(cid)
     if c["status"] not in PROPOSABLE:
@@ -392,7 +448,7 @@ async def v1_decision(lead_id: str, body: DecisionIn, x_api_key: Optional[str] =
     return await apply_decision(lead_id, body, "API")
 
 
-@api.get("/developer/leads/{lead_id}")
+@api.get("/developer/leads/{lead_id}", dependencies=[Depends(require_session)])
 async def dev_lead(lead_id: str):
     c = await db.cases.find_one({"lead_id": lead_id.strip().upper()}, NO_ID)
     if not c:
@@ -400,12 +456,12 @@ async def dev_lead(lead_id: str):
     return package(c, *await maps())
 
 
-@api.post("/developer/leads/{lead_id}/decision")
+@api.post("/developer/leads/{lead_id}/decision", dependencies=[Depends(require_session)])
 async def dev_decision(lead_id: str, body: DecisionIn):
     return await apply_decision(lead_id.strip().upper(), body, "API sandbox")
 
 
-@api.post("/orgs/{org_id}/agents")
+@api.post("/orgs/{org_id}/agents", dependencies=[Depends(require_session)])
 async def add_agent(org_id: str, body: AgentIn):
     org = await db.orgs.find_one({"id": org_id}, NO_ID)
     if not org:
@@ -418,14 +474,14 @@ async def add_agent(org_id: str, body: AgentIn):
     return a
 
 
-@api.patch("/agents/{agent_id}")
+@api.patch("/agents/{agent_id}", dependencies=[Depends(require_session)])
 async def patch_agent(agent_id: str, body: AgentPatch):
     if not (await db.agents.update_one({"id": agent_id}, {"$set": {"active": body.active}})).matched_count:
         raise HTTPException(404, "Agent not found")
     return await db.agents.find_one({"id": agent_id}, NO_ID)
 
 
-@api.get("/agents/workload")
+@api.get("/agents/workload", dependencies=[Depends(require_session)])
 async def workload(org_id: str):
     agents = await db.agents.find({"org_id": org_id}, NO_ID).to_list(500)
     for a in agents:
