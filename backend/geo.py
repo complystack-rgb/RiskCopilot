@@ -83,7 +83,7 @@ async def reverse(lat, lon):
 
 def _q(lat, lon):
     a = f"{lat},{lon}"
-    return f"""[out:json][timeout:40];(
+    return f"""[out:json][timeout:30];(
 nwr(around:8000,{a})["amenity"="fire_station"];nwr(around:8000,{a})["amenity"="hospital"];
 way(around:2500,{a})["waterway"~"river|canal|stream"];way(around:2500,{a})["natural"="water"];
 way(around:2000,{a})["highway"~"motorway|trunk|primary"];way(around:2000,{a})["railway"="rail"];
@@ -103,7 +103,7 @@ def _kind(t):
 async def _overpass(c, lat, lon):
     for url in OVERPASS:
         try:
-            r = await c.post(url, data={"data": _q(lat, lon)}, timeout=45)
+            r = await c.post(url, data={"data": _q(lat, lon)}, timeout=30)
             if r.status_code == 200:
                 return r.json()
         except Exception:
@@ -111,9 +111,34 @@ async def _overpass(c, lat, lon):
     return None
 
 
+PHOTON_POI = [("hospital", "amenity:hospital", 8, "hospital"), ("fire station", "amenity:fire_station", 15, "fire_station"), ("fuel", "amenity:fuel", 5, "fuel")]
+
+
+async def _photon_pois(c, lat, lon):
+    """Fallback when Overpass is down: nearby POIs from Photon, filtered by distance."""
+    elements, ok = [], False
+    for q, tag, km, kind in PHOTON_POI:
+        try:
+            r = await c.get(PHOTON, params={"q": q, "osm_tag": tag, "lat": lat, "lon": lon, "limit": 15, "lang": "en"})
+            if r.status_code != 200:
+                continue
+            ok = True
+            for f in r.json().get("features", []):
+                plon, plat = f["geometry"]["coordinates"]
+                if dist_km(lat, lon, plat, plon) <= km:
+                    elements.append({"lat": plat, "lon": plon, "_kind": kind, "tags": {"name": f.get("properties", {}).get("name")}})
+        except Exception:
+            continue
+    return {"elements": elements} if ok else None
+
+
 async def surroundings(lat, lon):
     async with httpx.AsyncClient(timeout=50, headers=UA) as c:
         data = await _overpass(c, lat, lon)
+        source = "OpenStreetMap open data · Open-Meteo elevation"
+        if data is None:
+            data = await _photon_pois(c, lat, lon)
+            source = "OpenStreetMap nearby places (Photon) · Open-Meteo elevation"
         try:
             el = await c.get("https://api.open-meteo.com/v1/elevation", params={"latitude": lat, "longitude": lon})
             elevation = el.json().get("elevation", [None])[0] if el.status_code == 200 else None
@@ -121,7 +146,7 @@ async def surroundings(lat, lon):
             elevation = None
     groups = defaultdict(list)
     for e in (data or {}).get("elements", []):
-        t = e.get("tags", {}); k = _kind(t)
+        t = e.get("tags", {}); k = e.get("_kind") or _kind(t)
         p = (e.get("lat"), e.get("lon")) if "lat" in e else (e.get("center", {}).get("lat"), e.get("center", {}).get("lon"))
         if not k or p[0] is None:
             continue
@@ -129,7 +154,7 @@ async def surroundings(lat, lon):
                           "distance_km": dist_km(lat, lon, *p), "lat": p[0], "lon": p[1], "detail": t.get("waterway") or t.get("highway") or t.get("natural") or ""})
     out = {k: sorted(v, key=lambda x: x["distance_km"])[:6] for k, v in groups.items()}
     counts = {k: len(v) for k, v in groups.items()}
-    return {"elevation_m": elevation, "features": out, "counts": counts, "source": "OpenStreetMap open data · Open-Meteo elevation", "available": data is not None}
+    return {"elevation_m": elevation, "features": out, "counts": counts, "source": source, "available": data is not None}
 
 
 async def climate(lat, lon):
