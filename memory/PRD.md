@@ -18,6 +18,13 @@ A white-label insurance platform (demo brand "ABC Insure", Powered by ComplyStac
 - Mobile bottom nav in the console.
 - Tested in iteration 5: backend 18/18, frontend flows passing. Fixes were applied for the sandbox toast, the Team guard, mobile layout and product copy.
 
+## Market-specific SME journey (2026-11, iteration 6)
+- URLs: `/in`, `/my`, `/id` (landing with IN/MY/ID switch) and `/{market}/quote`. `/` → `/in`, `/quote` → `/in/quote`. A market tag shows in the journey header.
+- Step 1 2x2 grid, all required, no format checks. IN: Business Name, PAN (Corporate), GSTIN (Corporate), Udyam Registration Number. MY: SSM Registration Number, TIN, SST Registration Number. ID: NIB, NPWP (Corporate), PKP Confirmation Number.
+- Config lives in `frontend/src/data/markets.js`: local revenue and payroll bands, address labels, map centre, and currency formatting for the report.
+- The backend stores `sme.registration`, routes the case to that market's org and agents, and uses per-market lead prefixes. Opening a case in the console switches the console to that case's market.
+- Copy cleanup across Steps 1 to 6: Title Case labels, no dashes, no filler text.
+
 ## Illustrative vs live
 - ILLUSTRATIVE: evidence findings, plate readings, premiums, testimonials, portfolio history, peer stats.
 - LIVE: address search, map surroundings (Overpass via the maps.mail.ru mirror), climate history, elevation.

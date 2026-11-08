@@ -238,7 +238,7 @@ async def create_case(body: SmeSubmit):
     else:
         pool = [h for h in HEROES if h[1] == market]
         hero = list(next((h for h in pool if any(w in h[6].lower() for w in act.split() if len(w) > 3)), pool[0]))
-    hero[3], hero[4], hero[5] = j["businessName"], j.get("city") or hero[4], j.get("state") or hero[5]
+    hero[3], hero[4], hero[5] = j["businessName"], j.get("city") or j.get("state") or hero[4], j.get("state") or hero[5]
     hero[6] = j.get("activity") or {"manufacturing": "Manufacturing", "retail": "Retail", "wholesale": "Wholesale and distribution", "it": "IT services", "hospitality": "Hospitality and food services",
                                     "healthcare": "Healthcare", "transport": "Transport and logistics"}.get(j.get("category"), (j.get("category") or hero[6]).title())
     hc = re.findall(r"\d+", j.get("headcount") or "")
@@ -252,10 +252,10 @@ async def create_case(body: SmeSubmit):
     if j.get("hasInsurance") != "Yes":
         hero[12] = None
     ctr = await db.counters.find_one_and_update({"_id": f"lead-{market}"}, {"$inc": {"n": 1}}, upsert=True, return_document=True)
-    agents = await db.agents.find({"active": True}, NO_ID).to_list(500)
+    agents = await db.agents.find({"active": True, "market": market}, NO_ID).to_list(500)
     c = build_case(tuple(hero), ctr["n"], random.Random(), agents, created=datetime.now(timezone.utc))
     c["source"] = "sme_journey"
-    c["sme"].update({"email": body.email, "phone": body.phone, "contact_name": j.get("contactName") or c["sme"]["contact_name"],
+    c["sme"].update({"email": body.email, "phone": body.phone, "contact_name": j.get("contactName") or "Not provided",
                      "registration": [{"label": str(r.get("label", ""))[:80], "value": str(r.get("value", ""))[:60]} for r in (j.get("registration") or [])[:5] if isinstance(r, dict)]})
     if j.get("lat") and j.get("lon"):
         c["sme"].update({"lat": j["lat"], "lon": j["lon"], "address": j.get("address") or c["sme"]["address"]})

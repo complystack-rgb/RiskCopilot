@@ -1,0 +1,1 @@
+Journey flow used by iteration 6 tests: landing header-quote-btn -> step1 fill name + reg ids + category-manufacturing -> next -> click map center -> next -> pick headcount/revenue/payroll pills -> next x5 -> wait protection-report -> submit-review-btn -> contact-email-input/contact-phone-input -> broker-review-submit -> open-in-console.

@@ -37,7 +37,7 @@ export const ZURICH_PRODUCTS = [
   {
     id: "shop",
     name: "Shop",
-    tagline: "A package for independent retail and salon trades up to ₹40 crore turnover.",
+    tagline: "A package for independent retail and salon trades.",
     icon: "Store",
     industries: ["retail", "hospitality"],
     priorities: ["premises", "stock", "thirdparty", "assets"],
@@ -107,7 +107,7 @@ export const ZURICH_PRODUCTS = [
   {
     id: "executive-risk",
     name: "Executive Risk Solutions",
-    tagline: "Directors and officers liability for private companies up to ₹1,700 crore turnover.",
+    tagline: "Directors and officers liability for private companies.",
     icon: "UserCog",
     industries: ["professional", "it", "manufacturing", "healthcare", "realestate", "trading"],
     priorities: ["continuity", "thirdparty"],

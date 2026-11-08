@@ -52,7 +52,7 @@ export const BrokerReviewDialog = ({ open, onOpenChange, data, engine }) => {
             <div className="space-y-3">
               <Input data-testid="contact-email-input" type="email" placeholder="Work email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} />
               <Input data-testid="contact-phone-input" placeholder="Mobile number" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} />
-              <Button data-testid="broker-review-submit" disabled={busy || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contact.email) || contact.phone.replace(/\D/g, "").length < 8} onClick={submit} className="w-full">{busy ? <Icons.Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Icons.Send className="mr-1.5 h-4 w-4" />}Submit</Button>
+              <Button data-testid="broker-review-submit" disabled={busy || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contact.email) || contact.phone.replace(/\D/g, "").length < 9} onClick={submit} className="w-full">{busy ? <Icons.Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Icons.Send className="mr-1.5 h-4 w-4" />}Submit</Button>
               <p className="text-[11px] text-slate-400">Only your assigned partner and ABC Insure can see your details.</p>
             </div>
           </>

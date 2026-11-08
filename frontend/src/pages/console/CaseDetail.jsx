@@ -43,8 +43,9 @@ const Actions = ({ c, onUpdate }) => {
 export default function CaseDetail() {
   const { id } = useParams();
   const [params] = useSearchParams();
-  const { orgName, agentName, money, meta } = useConsole();
+  const { orgName, agentName, money, meta, market, setMarket } = useConsole();
   const [c, setC] = useState(null);
+  useEffect(() => { if (c && meta && c.market !== market) setMarket(c.market); }, [c, meta]); // eslint-disable-line react-hooks/exhaustive-deps
   const [tab, setTab] = useState(params.get("tab") || "summary");
   const [focus, setFocus] = useState(null);
   useEffect(() => { api.get(`/cases/${id}`).then((r) => setC(r.data)).catch(() => setC(false)); }, [id]);

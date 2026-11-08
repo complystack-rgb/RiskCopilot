@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration 6: tested the market-aware SME journey for IN, MY and ID and how its data reaches the console. Backend: new pytest file /app/backend/tests/test_iter6_market_registration.py, 5 of 5 pass. It covers POST /api/cases with journey.market MY, ID, IN and XX: lead prefixes ZMY, ZID and ZIN, an unknown market falls back to ZIN, the MY distributor is Lumen Insurance Brokers Sdn Bhd, and sme.registration is stored exactly as sent. Frontend (Playwright): all routes pass. / goes to /in, /quote to /in/quote, /xx to /in. /my and /id show the Landing page with the active market switch button highlighted, and /console loads. The hero and header CTAs go to /{market}/quote, the hero business name prefill carries into Step 1, and the market-tag shows 'India · IN', 'Malaysia · MY' or 'Indonesia · ID'. Step 1 shows a 2x2 grid on desktop and a single column at 390px, with the correct ID fields per market. The Udyam placeholder is right. next-btn stays disabled until the name, all 3 IDs and a category are filled; whitespace alone does not count; any text is accepted; step1-hint toggles. Loading /my/quote after an IN session resets to a fresh MY journey. Step 2 labels are correct per market (State/PIN Code, State/Postcode, Province/Postal Code), the map centres on the market, and MY address search returned Malaysian results. Step 3 bands and placeholders use the right currency. Full MY journey to the report: cover premiums show in RM. Submit created ZMY with Lumen, and open-in-console showed the SSM, TIN and SST values in the Client contact panel. Full IN journey: ZIN-26027, Bharat Risk Brokers, PAN, GSTIN and Udyam shown. Step labels are Title Case, there are no Start Over buttons, and no em dashes or ' - ' were found in the visible SME journey text. No JS page errors. Found 3 issues: (1) the console opens a MY case in the India market context, so all amounts show in ₹; (2) one cover description on the MY report says ₹1,700 crore; (3) the phone check accepts 8 digits, not the requested 9 or more.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/cases", "issue": "Data fidelity: contact_name, employees and city come from the synthetic hero template when the journey does not supply them. For example, the MY case got contact 'Vikram Shah' and city 'Bayan Lepas' while the pinned state was Pahang. Agents are fetched from every market (db.agents.find({active:True})), and build_case relies on that list to pick the right org."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "BrokerReviewDialog", "issue": "The phone check is contact.phone.replace(/\\D/g,'').length < 8, so 8 digits are accepted. The request asked for 9 or more digits.", "selector": "[data-testid='contact-phone-input']", "priority": "LOW"},
+      {"component": "Protection report (MY and ID)", "issue": "The Executive Risk Solutions tagline is hardcoded in INR: 'private companies up to ₹1,700 crore turnover'. Retail package tagline: '₹40 crore'. Both come from data/zurichProducts.js and show on non-IN markets.", "selector": "[data-testid^='cover-card-']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "MY SME submit -> open-in-console", "issue": "The link goes to /console/cases/{id}, but the console keeps its India context (persona Ritika, Bharat Risk Brokers). The MY case therefore shows protection gap, insurable value and annual revenue in ₹ Cr, not RM. An IN broker admin can also view a Lumen (MY) case, which is the access-guard gap already noted in iteration 5. Fix: on CaseDetail, switch the console market (and a matching persona) to case.market, or pass ?market=MY in the open-in-console link.", "affected_selectors": ["[data-testid='open-in-console']"]}
+    ],
+    "design_issues": [
+      {"screen": "Landing /my and /id", "issues": ["The 'Built for' strip lists India-centric sectors on every market. Cover tiles use '&' in sentence or title case ('Fire & Property', 'Textiles & garments'), which is inconsistent casing."]},
+      {"screen": "Step 2 Location", "issues": ["After the reverse geocode the City field can stay blank (seen on MY) while State and Postcode are filled."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter6_market_registration.py", "/app/test_reports/pytest/pytest_iter6.xml"],
+  "action_items": [
+    "Make the console follow the case market when opening a case from the SME success dialog (open-in-console), so MY and ID cases show RM and Rp, not ₹.",
+    "Localise or remove the INR amounts in product taglines (data/zurichProducts.js) for MY and ID.",
+    "Change the phone minimum from 8 to 9 digits in BrokerReviewDialog if 9 or more is the requirement."
+  ],
+  "critical_code_review_comments": [
+    "Journey.jsx resets in a useEffect after the first render, so for one frame a fresh /my/quote load can render with the stale IN data.",
+    "server.py create_case lets hero template values (contact_name, employees, city) overwrite the case when the SME left them blank. Consider null or 'Not given' instead of synthetic Indian names.",
+    "No DELETE endpoint exists for cases, so test data has to be cleaned up directly in MongoDB."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter6_market_registration.py"],
+  "success_rate": {"backend": "100%", "frontend": "92%"},
+  "seed_data_creation": "Created and then deleted by lead_id (filtered to source sme_journey and a TEST_ name): ZMY-26024, ZID-26023, ZIN-26025, ZIN-26026, ZMY-26025, ZMY-26026, ZIN-26027. No seed data was modified.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run pytest with -n 0. The address step needs a click at the centre of [data-testid=address-map]. Steps 3 to 7 are not gated: click next-btn 5 times, then wait for protection-report. Clean up by lead_id in Mongo test_database.cases, because there is no delete API. After a fix, check that open-in-console for a MY case shows RM and Lumen persona context."
+}
