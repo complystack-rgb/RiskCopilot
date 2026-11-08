@@ -1,4 +1,5 @@
 """Live location and climate intelligence from open data (OSM Overpass, Nominatim, Open-Meteo)."""
+import asyncio
 import math
 from collections import defaultdict
 import httpx
@@ -50,21 +51,47 @@ def _kind(t):
     if t.get("landuse") == "industrial": return "industrial"
 
 
-async def surroundings(lat, lon):
-    data = None
-    async with httpx.AsyncClient(timeout=35, headers=UA) as c:
-        for url in OVERPASS:
+NOMI = [("fire_station", "fire station", 0.09), ("hospital", "hospital", 0.07), ("fuel", "fuel", 0.02), ("water", "river", 0.025),
+        ("water", "canal", 0.025), ("rail", "railway station", 0.02), ("industrial", "industrial estate", 0.015), ("road", "highway", 0.02)]
+_nomi_lock = asyncio.Lock()
+
+
+async def _nominatim(c, lat, lon):
+    elements, ok = [], False
+    async with _nomi_lock:
+        for kind, q, d in NOMI:
             try:
-                r = await c.post(url, data={"data": _q(lat, lon)})
+                r = await c.get("https://nominatim.openstreetmap.org/search", params={"q": q, "viewbox": f"{lon - d},{lat + d},{lon + d},{lat - d}", "bounded": 1, "format": "jsonv2", "limit": 10})
                 if r.status_code == 200:
-                    data = r.json(); break
+                    ok = True
+                    elements += [{"lat": float(x["lat"]), "lon": float(x["lon"]), "tags": {"name": x.get("name")}, "_kind": kind} for x in r.json()]
             except Exception:
-                continue
-        el = await c.get("https://api.open-meteo.com/v1/elevation", params={"latitude": lat, "longitude": lon})
-    elevation = el.json().get("elevation", [None])[0] if el.status_code == 200 else None
+                pass
+            await asyncio.sleep(1.1)
+    return {"elements": elements} if ok else None
+
+
+async def _overpass(c, lat, lon):
+    for url in OVERPASS[:2]:
+        try:
+            r = await c.post(url, data={"data": _q(lat, lon)}, timeout=10)
+            if r.status_code == 200:
+                return r.json()
+        except Exception:
+            continue
+
+
+async def surroundings(lat, lon):
+    async with httpx.AsyncClient(timeout=12, headers=UA) as c:
+        data = await _overpass(c, lat, lon) or await _nominatim(c, lat, lon)
+        try:
+            el = await c.get("https://api.open-meteo.com/v1/elevation", params={"latitude": lat, "longitude": lon})
+            elevation = el.json().get("elevation", [None])[0] if el.status_code == 200 else None
+        except Exception:
+            elevation = None
     groups = defaultdict(list)
     for e in (data or {}).get("elements", []):
-        t = e.get("tags", {}); k = _kind(t)
+        t = e.get("tags", {}); k = e.get("_kind") or _kind(t)
         p = (e.get("lat"), e.get("lon")) if "lat" in e else (e.get("center", {}).get("lat"), e.get("center", {}).get("lon"))
         if not k or p[0] is None:
             continue
@@ -72,7 +99,7 @@ async def surroundings(lat, lon):
                           "distance_km": dist_km(lat, lon, *p), "lat": p[0], "lon": p[1], "detail": t.get("waterway") or t.get("highway") or t.get("natural") or ""})
     out = {k: sorted(v, key=lambda x: x["distance_km"])[:6] for k, v in groups.items()}
     counts = {k: len(v) for k, v in groups.items()}
-    return {"elevation_m": elevation, "features": out, "counts": counts, "source": "OpenStreetMap via Overpass API · Open-Meteo elevation", "available": data is not None}
+    return {"elevation_m": elevation, "features": out, "counts": counts, "source": "OpenStreetMap open data · Open-Meteo elevation", "available": data is not None}
 
 
 async def climate(lat, lon):

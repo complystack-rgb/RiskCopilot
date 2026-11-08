@@ -28,6 +28,11 @@ A white-label insurance platform (demo brand "ABC Insure", Powered by ComplyStac
 ## Roles (2026-11)
 - Field agent: own cases. Broker admin: own org cases and Team. Insurer underwriter (one per market, org ins-in/ins-my/ins-id): all cases in market, Team for any broker org, and the only role with the Developer Portal. Gating is UI only (no real login yet).
 
+## Map intelligence reliability (2026-11)
+- The public Overpass mirrors are often unreachable or slow from the server, so most cases showed "Map data unavailable".
+- Now Overpass is tried for 10 seconds per mirror, then the app falls back to Nominatim searches (fire station, hospital, fuel, river, canal, rail, industrial, highway), sent one per second.
+- Results are cached in `geo_cache`. Every case is pre-fetched in the background on startup, after a demo reset and after each new SME submission. The tabs also have a Try Again button.
+
 ## Illustrative vs live
 - ILLUSTRATIVE: evidence findings, plate readings, premiums, testimonials, portfolio history, peer stats.
 - LIVE: address search, map surroundings (Overpass via the maps.mail.ru mirror), climate history, elevation.

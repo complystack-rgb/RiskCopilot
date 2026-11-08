@@ -47,7 +47,7 @@ export default function StepAddress() {
           </ul>)}
       </div>
       <div className="overflow-hidden rounded-xl border border-slate-200" data-testid="address-map">
-        <MapContainer center={pos} zoom={data.lat ? 16 : m.zoom} style={{ height: 360 }} scrollWheelZoom={false}>
+        <MapContainer attributionControl={false} center={pos} zoom={data.lat ? 16 : m.zoom} style={{ height: 360 }} scrollWheelZoom={false}>
           <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="Imagery © Esri" />
           <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" />
           {data.lat && <><Marker position={pos} icon={PIN} draggable eventHandlers={{ dragend: (e) => { const p = e.target.getLatLng(); drop(p.lat, p.lng); } }} /><Fly pos={pos} /></>}

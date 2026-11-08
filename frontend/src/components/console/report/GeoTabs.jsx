@@ -16,14 +16,20 @@ const FEAT = { fire_station: ["Nearest fire station", Icons.Siren, "#DC2626"], h
 const useGeo = (path, lat, lon) => {
   const [d, setD] = useState(null);
   const [err, setErr] = useState(false);
-  useEffect(() => { setD(null); setErr(false); api.get(path, { params: { lat, lon } }).then((r) => setD(r.data)).catch(() => setErr(true)); }, [path, lat, lon]);
-  return [d, err];
+  const [n, setN] = useState(0);
+  useEffect(() => { setD(null); setErr(false); api.get(path, { params: { lat, lon } }).then((r) => setD(r.data)).catch(() => setErr(true)); }, [path, lat, lon, n]);
+  return [d, err, () => setN((x) => x + 1)];
 };
+
+const Retry = ({ onClick, text }) => (
+  <p className="flex items-center gap-3 text-sm text-slate-500">{text}
+    <button data-testid="geo-retry-btn" onClick={onClick} className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50">Try Again</button></p>
+);
 
 export const LocationTab = ({ c }) => {
   const { lat, lon } = c.sme;
   const [layer, setLayer] = useState("satellite");
-  const [d, err] = useGeo("/geo/surroundings", lat, lon);
+  const [d, err, retry] = useGeo("/geo/surroundings", lat, lon);
   const f = d?.features || {};
   const brief = [];
   if (f.fire_station?.[0]) brief.push(`Fire station ${f.fire_station[0].distance_km} km away (${f.fire_station[0].name}), so expect a ${f.fire_station[0].distance_km > 5 ? "slow" : "reasonable"} response time.`);
@@ -36,7 +42,7 @@ export const LocationTab = ({ c }) => {
       <Panel title="Site map" icon={Icons.Map} className="lg:col-span-3" testid="site-map" action={
         <div className="flex rounded-md border border-slate-200 p-0.5">{["street", "satellite"].map((l) => <button key={l} data-testid={`map-${l}`} onClick={() => setLayer(l)} className={`rounded px-2.5 py-1 text-[11px] font-semibold capitalize ${layer === l ? "bg-[#0A1F44] text-white" : "text-slate-600"}`}>{l}</button>)}</div>}>
         <div className="-m-5 overflow-hidden rounded-b-lg">
-          <MapContainer center={[lat, lon]} zoom={15} style={{ height: 460 }} scrollWheelZoom={false}>
+          <MapContainer attributionControl={false} center={[lat, lon]} zoom={15} style={{ height: 460 }} scrollWheelZoom={false}>
             <TileLayer key={layer} url={TILES[layer][0]} attribution={TILES[layer][1]} />
             <Circle center={[lat, lon]} radius={2000} pathOptions={{ color: "#2563EB", weight: 1, fillOpacity: 0.04 }} />
             {Object.entries(f).flatMap(([k, list]) => list.slice(0, 3).map((x, i) => <CircleMarker key={k + i} center={[x.lat, x.lon]} radius={6} pathOptions={{ color: "#fff", weight: 2, fillColor: FEAT[k][2], fillOpacity: 1 }}><LTooltip>{FEAT[k][0]}: {x.name} · {x.distance_km} km</LTooltip></CircleMarker>))}
@@ -48,7 +54,7 @@ export const LocationTab = ({ c }) => {
       <div className="space-y-6 lg:col-span-2">
         <Panel title="Surroundings brief" icon={Icons.Binoculars} testid="surroundings-brief">
           {!d && !err && <p className="flex items-center gap-2 text-sm text-slate-500"><Icons.Loader2 className="h-4 w-4 animate-spin" />Reading open map data within 2 km…</p>}
-          {(err || (d && !d.available)) && <p className="text-sm text-slate-500">Map data is temporarily unavailable. Try again shortly.</p>}
+          {(err || (d && !d.available)) && <Retry onClick={retry} text="Map data is temporarily unavailable." />}
           {d?.available && <ul className="space-y-2 text-sm text-slate-700">{brief.map((b) => <li key={b} className="flex gap-2"><Icons.ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />{b}</li>)}</ul>}
         </Panel>
         {d?.available && <Panel title="What's nearby" icon={Icons.MapPinned}><ul className="space-y-3">{Object.entries(FEAT).filter(([k]) => f[k]?.length).map(([k, [label, I, col]]) => (
@@ -61,8 +67,8 @@ export const LocationTab = ({ c }) => {
 };
 
 export const ClimateTab = ({ c }) => {
-  const [d, err] = useGeo("/geo/climate", c.sme.lat, c.sme.lon);
-  if (err) return <Panel><p className="text-sm text-slate-500">Climate history is temporarily unavailable.</p></Panel>;
+  const [d, err, retry] = useGeo("/geo/climate", c.sme.lat, c.sme.lon);
+  if (err) return <Panel><Retry onClick={retry} text="Climate history is temporarily unavailable." /></Panel>;
   if (!d) return <Panel><p className="flex items-center gap-2 text-sm text-slate-500"><Icons.Loader2 className="h-4 w-4 animate-spin" />Loading five years of daily weather for this site…</p></Panel>;
   const wetMax = Math.max(...d.monthly.map((x) => x.rain_mm));
   const impacts = [
