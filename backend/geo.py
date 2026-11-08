@@ -1,12 +1,29 @@
-"""Live location and climate intelligence from open data (OSM Overpass, Nominatim, Open-Meteo)."""
+"""Live location and climate intelligence from open data (Photon, OSM Overpass, Open-Meteo)."""
 import asyncio
 import math
+import time
 from collections import defaultdict
 import httpx
 
 UA = {"User-Agent": "ComplyStack/1.0 (broker risk prototype)"}
-OVERPASS = ["https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
+PHOTON = "https://photon.komoot.io/api/"
+PHOTON_REVERSE = "https://photon.komoot.io/reverse"
+OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+TTL = 7 * 24 * 3600
+_memo = {}
+
+
+def _memo_get(key):
+    hit = _memo.get(key)
+    if hit and hit[0] > time.time():
+        return hit[1]
+
+
+def _memo_put(key, value):
+    if len(_memo) > 2000:
+        _memo.clear()
+    _memo[key] = (time.time() + TTL, value)
 
 
 def dist_km(a, b, c, d):
@@ -16,25 +33,57 @@ def dist_km(a, b, c, d):
     return round(2 * r * math.asin(math.sqrt(h)), 2)
 
 
+def _parts(p):
+    city = p.get("city") or p.get("town") or p.get("county") or p.get("district") or ""
+    state = p.get("state", "")
+    postcode = p.get("postcode", "")
+    label_bits = [p.get("name"), p.get("street"), p.get("district"), city, state, postcode, p.get("country")]
+    seen, label = set(), []
+    for b in label_bits:
+        if b and b not in seen:
+            seen.add(b)
+            label.append(b)
+    return city, state, postcode, ", ".join(label)
+
+
 async def search(q):
+    key = ("search", q.strip().lower())
+    hit = _memo_get(key)
+    if hit is not None:
+        return hit
     async with httpx.AsyncClient(timeout=10, headers=UA) as c:
-        r = await c.get("https://nominatim.openstreetmap.org/search", params={"q": q, "format": "json", "limit": 6, "addressdetails": 1})
-        return [{"label": x["display_name"], "lat": float(x["lat"]), "lon": float(x["lon"]),
-                 "city": x.get("address", {}).get("city") or x.get("address", {}).get("town") or x.get("address", {}).get("county", ""),
-                 "state": x.get("address", {}).get("state", ""), "postcode": x.get("address", {}).get("postcode", "")} for x in r.json()]
+        r = await c.get(PHOTON, params={"q": q, "limit": 6, "lang": "en"})
+        r.raise_for_status()
+        out = []
+        for f in r.json().get("features", []):
+            p = f.get("properties", {})
+            lon, lat = f["geometry"]["coordinates"]
+            city, state, postcode, label = _parts(p)
+            out.append({"label": label, "lat": float(lat), "lon": float(lon), "city": city, "state": state, "postcode": postcode})
+    _memo_put(key, out)
+    return out
 
 
 async def reverse(lat, lon):
+    key = ("reverse", round(lat, 4), round(lon, 4))
+    hit = _memo_get(key)
+    if hit is not None:
+        return hit
     async with httpx.AsyncClient(timeout=10, headers=UA) as c:
-        r = await c.get("https://nominatim.openstreetmap.org/reverse", params={"lat": lat, "lon": lon, "format": "json"})
-        j = r.json()
-        a = j.get("address", {})
-        return {"label": j.get("display_name", ""), "city": a.get("city") or a.get("town") or a.get("county", ""), "state": a.get("state", ""), "postcode": a.get("postcode", "")}
+        r = await c.get(PHOTON_REVERSE, params={"lat": lat, "lon": lon, "limit": 1, "lang": "en"})
+        r.raise_for_status()
+        feats = r.json().get("features", [])
+    if not feats:
+        raise ValueError("no reverse geocoding result")
+    city, state, postcode, label = _parts(feats[0].get("properties", {}))
+    out = {"label": label, "city": city, "state": state, "postcode": postcode}
+    _memo_put(key, out)
+    return out
 
 
 def _q(lat, lon):
     a = f"{lat},{lon}"
-    return f"""[out:json][timeout:25];(
+    return f"""[out:json][timeout:40];(
 nwr(around:8000,{a})["amenity"="fire_station"];nwr(around:8000,{a})["amenity"="hospital"];
 way(around:2500,{a})["waterway"~"river|canal|stream"];way(around:2500,{a})["natural"="water"];
 way(around:2000,{a})["highway"~"motorway|trunk|primary"];way(around:2000,{a})["railway"="rail"];
@@ -51,39 +100,20 @@ def _kind(t):
     if t.get("landuse") == "industrial": return "industrial"
 
 
-NOMI = [("fire_station", "fire station", 0.09), ("hospital", "hospital", 0.07), ("fuel", "fuel", 0.02), ("water", "river", 0.025),
-        ("water", "canal", 0.025), ("rail", "railway station", 0.02), ("industrial", "industrial estate", 0.015), ("road", "highway", 0.02)]
-_nomi_lock = asyncio.Lock()
-
-
-async def _nominatim(c, lat, lon):
-    elements, ok = [], False
-    async with _nomi_lock:
-        for kind, q, d in NOMI:
-            try:
-                r = await c.get("https://nominatim.openstreetmap.org/search", params={"q": q, "viewbox": f"{lon - d},{lat + d},{lon + d},{lat - d}", "bounded": 1, "format": "jsonv2", "limit": 10})
-                if r.status_code == 200:
-                    ok = True
-                    elements += [{"lat": float(x["lat"]), "lon": float(x["lon"]), "tags": {"name": x.get("name")}, "_kind": kind} for x in r.json()]
-            except Exception:
-                pass
-            await asyncio.sleep(1.1)
-    return {"elements": elements} if ok else None
-
-
 async def _overpass(c, lat, lon):
-    for url in OVERPASS[:2]:
+    for url in OVERPASS:
         try:
-            r = await c.post(url, data={"data": _q(lat, lon)}, timeout=10)
+            r = await c.post(url, data={"data": _q(lat, lon)}, timeout=45)
             if r.status_code == 200:
                 return r.json()
         except Exception:
             continue
+    return None
 
 
 async def surroundings(lat, lon):
-    async with httpx.AsyncClient(timeout=12, headers=UA) as c:
-        data = await _overpass(c, lat, lon) or await _nominatim(c, lat, lon)
+    async with httpx.AsyncClient(timeout=50, headers=UA) as c:
+        data = await _overpass(c, lat, lon)
         try:
             el = await c.get("https://api.open-meteo.com/v1/elevation", params={"latitude": lat, "longitude": lon})
             elevation = el.json().get("elevation", [None])[0] if el.status_code == 200 else None
@@ -91,7 +121,7 @@ async def surroundings(lat, lon):
             elevation = None
     groups = defaultdict(list)
     for e in (data or {}).get("elements", []):
-        t = e.get("tags", {}); k = e.get("_kind") or _kind(t)
+        t = e.get("tags", {}); k = _kind(t)
         p = (e.get("lat"), e.get("lon")) if "lat" in e else (e.get("center", {}).get("lat"), e.get("center", {}).get("lon"))
         if not k or p[0] is None:
             continue
