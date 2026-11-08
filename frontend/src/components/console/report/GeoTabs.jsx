@@ -49,12 +49,13 @@ export const LocationTab = ({ c }) => {
             <CircleMarker center={[lat, lon]} radius={10} pathOptions={{ color: "#fff", weight: 3, fillColor: "#DC2626", fillOpacity: 1 }}><LTooltip permanent direction="top">{c.sme.business_name}</LTooltip></CircleMarker>
           </MapContainer>
         </div>
-        <div className="mt-8 flex flex-wrap gap-4 font-mono text-[11px] text-slate-500"><span>Lat {lat}</span><span>Lon {lon}</span><span>Elevation {d?.elevation_m ?? "…"} m</span><span>{c.sme.address}</span></div>
+        <div className="mt-8 flex flex-wrap gap-4 font-mono text-[11px] text-slate-500"><span>Lat {lat}</span><span>Lon {lon}</span><span>Elevation {d ? (d.elevation_m ?? "n/a") : "…"} m</span><span>{c.sme.address}</span></div>
       </Panel>
       <div className="space-y-6 lg:col-span-2">
         <Panel title="Surroundings brief" icon={Icons.Binoculars} testid="surroundings-brief">
           {!d && !err && <p className="flex items-center gap-2 text-sm text-slate-500"><Icons.Loader2 className="h-4 w-4 animate-spin" />Reading open map data within 2 km…</p>}
           {(err || (d && !d.available)) && <Retry onClick={retry} text="Map data is temporarily unavailable." />}
+          {d?.available && !Object.keys(f).length && <Retry onClick={retry} text="No mapped features found near this site yet." />}
           {d?.available && <ul className="space-y-2 text-sm text-slate-700">{brief.map((b) => <li key={b} className="flex gap-2"><Icons.ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />{b}</li>)}</ul>}
         </Panel>
         {d?.available && <Panel title="What's nearby" icon={Icons.MapPinned}><ul className="space-y-3">{Object.entries(FEAT).filter(([k]) => f[k]?.length).map(([k, [label, I, col]]) => (

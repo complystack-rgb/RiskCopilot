@@ -12,7 +12,7 @@ export const useLang = () => {
 };
 
 export const CopyBtn = ({ text, testid }) => (
-  <button data-testid={testid} onClick={() => { navigator.clipboard?.writeText(text); toast.success("Copied"); }}
+  <button data-testid={testid} onClick={() => navigator.clipboard?.writeText(text).then(() => toast.success("Copied"), () => toast.error("Copy is blocked in this browser"))}
     className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-slate-400 transition-colors hover:bg-white/10 hover:text-white"><Icons.Copy className="h-3 w-3" />Copy</button>
 );
 

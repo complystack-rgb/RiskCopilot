@@ -443,7 +443,7 @@ async def cached(kind, lat, lon, fn):
         data = await fn(lat, lon)
     except Exception as e:
         raise HTTPException(502, f"Open data service unavailable: {e.__class__.__name__}")
-    if kind != "surroundings" or data.get("available"):
+    if kind != "surroundings" or (data.get("available") and data.get("counts")):
         await db.geo_cache.update_one({"_id": key}, {"$set": {"data": data}}, upsert=True)
     return data
 

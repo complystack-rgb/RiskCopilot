@@ -1,0 +1,43 @@
+{
+  "summary": "Frontend only testing of the underwriter only Developer Portal, persona gating, Team org switch for underwriters, all 7 module pages (5 tabs each, 25 endpoint cards, 300 generated snippets across HTTP/SDK x 6 languages), the API Explorer live calls, the Authentication/Webhooks/Errors/SDKs/Changelog pages, Location intelligence across IN/MY/ID cases, and removal of map attribution. Almost everything works. One functional gap: ZIN-26007 (Surat) shows an EMPTY Surroundings brief and an empty What's nearby panel, because the Nominatim fallback cached an empty result as available=true. Fallback data is also sparse for many cases, and some have a null elevation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/geo/surroundings (geo.py _nominatim)", "issue": "ok=True as soon as any single Nominatim query returns 200, even an empty or partial one. For lat 21.1153, lon 72.85829 (ZIN-26007) this gives {features:{}, counts:{}, available:true}, which is cached for good. The UI then never offers Try Again. Many other cases served by the fallback have only 2 to 36 features in total (ZIN-26008: 2). Suggested fix: treat a result with zero (or too few) elements as unavailable and don't cache it, and retry Overpass on later requests."},
+      {"endpoint": "GET /api/geo/surroundings", "issue": "elevation_m is null for some cached sites (ZID-26006 Denpasar). The UI shows 'Elevation … m', which looks like it is still loading. The null result is cached and never refreshed."},
+      {"endpoint": "Explorer intake.list / cases.list -> /api/cases", "issue": "limit and starting_after are ignored (limit=2 still returns 24 rows). The live response is a raw array of internal docs (id, image_key, ...), not the documented {data, has_more, next_cursor} shape. distribution.agents returns open_cases, but the docs say open. These are documentation mismatches only."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "GeoTabs LocationTab", "issue": "When d.available is true but features is empty, the Surroundings brief panel is blank and What's nearby has no rows. There is no 'no mapped features found' message and no retry option. Seen on ZIN-26007.", "selector": "[data-testid=surroundings-brief]", "priority": "MEDIUM"},
+      {"component": "GeoTabs LocationTab", "issue": "When elevation_m is null the label shows the loading ellipsis 'Elevation … m' even after the data has loaded.", "selector": "site-map footer", "priority": "LOW"},
+      {"component": "CopyBtn (components/console/dev/shared.jsx)", "issue": "navigator.clipboard.writeText(text) is not awaited or caught. When clipboard permission is denied it throws an unhandled rejection (the Emergent overlay shows), and the 'Copied' toast still appears.", "selector": "key-test/key-live Copy, code-*-copy", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Module API Reference snippets", "issues": ["The Python SDK snippet uses os.environ but only has 'import complystack', so the 'import os' is missing.", "Go SDK field names use AgentId/LeadId rather than idiomatic AgentID/LeadID (cosmetic).", "Module snippets use the fixed key cs_test_4eC39..., but the Authentication page shows a market specific key (cs_test_my_4eC39...), which is inconsistent.", "Python HTTP snippet: the json= body is indented 2 spaces inside a 4 space block (valid but untidy)."]},
+      {"screen": "Team (uw-sari, ID)", "issues": ["Only one broker org exists in ID, so the team-org-select has a single option. That is fine, but switching orgs could only be checked for IN/MY."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "geo.py _nominatim/surroundings: don't mark available=true or cache when the fallback returns 0 elements (or only partial results because of 429s); retry Overpass on later requests. Then re-warm ZIN-26007 (21.1153, 72.85829) and the other sparse sites.",
+    "GeoTabs LocationTab: show a clear empty state with geo-retry-btn when features is empty, and show 'Elevation N/A' instead of '…' when elevation_m is null after load.",
+    "codegen.js sdkSnippet python: add 'import os'.",
+    "shared.jsx CopyBtn: await or catch clipboard.writeText and show an error toast when it fails."
+  ],
+  "critical_code_review_comments": [
+    "geo.py: a cached empty result with available=true permanently hides the Try Again path. This breaks requirement (2), map intelligence working for every case.",
+    "DevExplorer: vals is only re-initialised through pick(). If the ?ep= query changes by external navigation while the explorer is mounted (for example clicking a Try It link from another tab), the params stay stale. Low risk.",
+    "DevExplorer sends object-typed body params as raw strings (JSON is not parsed). This doesn't affect the current live endpoints, but it would for future object params.",
+    "ConsoleContext.setMarket: if the stored persona belongs to a different market, it silently falls back to that market's admin. Fine, but worth knowing."
+  ],
+  "updated_files": ["/app/test_reports/iteration_7.json"],
+  "success_rate": {"backend": "N/A (frontend only, API spot checks)", "frontend": "94%"},
+  "seed_data_creation": "None. The SME journey was only taken to step 2 (TEST_Map Check), and no lead was submitted. No decisions were sent, and reset-demo was not called.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Verified: the nav-developer-portal entry and the /console/developers route appear only for uw-arjun/uw-mei/uw-sari. ag-ritika, ag-imran, ag-aisyah and ag-dewi are redirected to /console. team-org-select lists IN orgs and switches. All 7 module pages and 5 tabs render with no undefined or [object Object]. The language choice persists across code blocks (localStorage cs_dev_lang). The HTTP/SDK toggles work. The Try It link preselects the endpoint in the Explorer. Live explorer calls returned 200: surroundings, climate, geocode, reverse, intake.get ZIN-26003, intake.list, cases.list, distribution.agents. decisions.package ZZZ returned 404 in red. Auth reveal and hide work, and rotate/create show info toasts. Webhooks envelope, verify tabs and event catalog render. error-table renders, and there are 5 changelog entries. No attribution control or Leaflet/Esri text on the case map or on the /in/quote step 2 map. All 68 cases return available=true from /api/geo/surroundings, but ZIN-26007 has 0 features. The preview ingress returns 429 if you do many full page reloads quickly: use SPA navigation through nav-* and devnav-* clicks.",
+  "rca of the issue": "ZIN-26007 shows an empty location brief. surroundings() tries Overpass first, and when that fails it falls back to _nominatim(). _nominatim sets ok=True on any HTTP 200, even when the result is []. For Surat (21.1153, 72.85829) all the queries came back empty, so surroundings returns available:true with an empty features object, and warm_geo/the cache stores that permanently. The frontend shows Retry only when !available, so the user sees a blank brief with no way to retry. To reproduce: GET /api/geo/surroundings?lat=21.1153&lon=72.85829 returns {features:{}, counts:{}, available:true}. To fix: require at least one element (or one category) before treating the result as available, skip caching otherwise, clear the bad cache entries, and add a frontend empty state."
+}

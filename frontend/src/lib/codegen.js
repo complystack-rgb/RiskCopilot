@@ -1,7 +1,6 @@
 import { API_HOST } from "@/data/devportal/modules";
 
 export const LANGS = [["curl", "cURL"], ["node", "Node.js"], ["python", "Python"], ["java", "Java"], ["php", "PHP"], ["go", "Go"]];
-const KEY = "cs_test_4eC39HqLyjWDarjtT1zdp7dc";
 
 const sample = (e) => {
   const val = (p) => (p.example === "" || p.example === undefined ? null : p.example);
@@ -19,9 +18,9 @@ const sample = (e) => {
 };
 
 const j = (o, n = 2) => JSON.stringify(o, null, n);
-const pyLit = (v) => j(v).replace(/\btrue\b/g, "True").replace(/\bfalse\b/g, "False").replace(/\bnull\b/g, "None");
+const pyLit = (v, n = 2) => j(v, n).replace(/\btrue\b/g, "True").replace(/\bfalse\b/g, "False").replace(/\bnull\b/g, "None");
 const camel = (s) => s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-const pascal = (s) => camel(s).replace(/^./, (c) => c.toUpperCase());
+const pascal = (s) => camel(s).replace(/^./, (c) => c.toUpperCase()).replace(/Id$/, "ID");
 const phpLit = (v) => (Array.isArray(v) ? `[${v.map(phpLit).join(", ")}]` : v && typeof v === "object" ? `[${Object.entries(v).map(([k, x]) => `'${k}' => ${phpLit(x)}`).join(", ")}]` : typeof v === "string" ? `'${v}'` : String(v));
 const goLit = (v) => (typeof v === "string" ? `"${v}"` : v && typeof v === "object" ? `map[string]any${j(v).replace(/\n/g, " ")}` : String(v));
 
@@ -29,9 +28,9 @@ export const httpSnippet = (e, lang) => {
   const { url, body } = sample(e);
   const b = body ? j(body) : null;
   switch (lang) {
-    case "curl": return `curl -X ${e.method} "${url}" \\\n  -H "Authorization: Bearer ${KEY}"${b ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${j(body, 0)}'` : ""}`;
+    case "curl": return `curl -X ${e.method} "${url}" \\\n  -H "Authorization: Bearer $COMPLYSTACK_KEY"${b ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${j(body, 0)}'` : ""}`;
     case "node": return `const res = await fetch("${url}", {\n  method: "${e.method}",\n  headers: {\n    Authorization: \`Bearer \${process.env.COMPLYSTACK_KEY}\`,${b ? `\n    "Content-Type": "application/json",` : ""}\n  },${b ? `\n  body: JSON.stringify(${b.replace(/\n/g, "\n  ")}),` : ""}\n});\nconst data = await res.json();`;
-    case "python": return `import os, requests\n\nres = requests.${e.method.toLowerCase()}(\n    "${url}",\n    headers={"Authorization": f"Bearer {os.environ['COMPLYSTACK_KEY']}"},${b ? `\n    json=${pyLit(body).replace(/\n/g, "\n    ")},` : ""}\n)\ndata = res.json()`;
+    case "python": return `import os, requests\n\nres = requests.${e.method.toLowerCase()}(\n    "${url}",\n    headers={"Authorization": f"Bearer {os.environ['COMPLYSTACK_KEY']}"},${b ? `\n    json=${pyLit(body, 4).replace(/\n/g, "\n    ")},` : ""}\n)\ndata = res.json()`;
     case "java": return `HttpClient client = HttpClient.newHttpClient();\nHttpRequest req = HttpRequest.newBuilder()\n    .uri(URI.create("${url}"))\n    .header("Authorization", "Bearer " + System.getenv("COMPLYSTACK_KEY"))${b ? `\n    .header("Content-Type", "application/json")` : ""}\n    .method("${e.method}", ${b ? `HttpRequest.BodyPublishers.ofString("${j(body, 0).replace(/"/g, '\\"')}")` : "HttpRequest.BodyPublishers.noBody()"})\n    .build();\nHttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());`;
     case "php": return `<?php\n$ch = curl_init("${url}");\ncurl_setopt_array($ch, [\n    CURLOPT_CUSTOMREQUEST => "${e.method}",\n    CURLOPT_RETURNTRANSFER => true,\n    CURLOPT_HTTPHEADER => [\n        "Authorization: Bearer " . getenv("COMPLYSTACK_KEY"),${b ? `\n        "Content-Type: application/json",` : ""}\n    ],${b ? `\n    CURLOPT_POSTFIELDS => json_encode(${phpLit(body)}),` : ""}\n]);\n$data = json_decode(curl_exec($ch), true);`;
     case "go": return `${b ? `payload := strings.NewReader(\`${j(body, 0)}\`)\n` : ""}req, _ := http.NewRequest("${e.method}", "${url}", ${b ? "payload" : "nil"})\nreq.Header.Set("Authorization", "Bearer "+os.Getenv("COMPLYSTACK_KEY"))${b ? `\nreq.Header.Set("Content-Type", "application/json")` : ""}\nres, err := http.DefaultClient.Do(req)\nif err != nil {\n    log.Fatal(err)\n}\ndefer res.Body.Close()`;
@@ -46,7 +45,7 @@ export const sdkSnippet = (e, lang) => {
   switch (lang) {
     case "curl": return httpSnippet(e, "curl");
     case "node": return `import ComplyStack from "@complystack/node";\n\nconst cs = new ComplyStack(process.env.COMPLYSTACK_KEY);\nconst result = await cs.${parts.map(camel).join(".")}(${j(Object.fromEntries(a.map(([k, v]) => [camel(k), v])))});`;
-    case "python": return `import complystack\n\ncs = complystack.Client(api_key=os.environ["COMPLYSTACK_KEY"])\nresult = cs.${parts.map((p) => p.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase())).join(".")}(\n${a.map(([k, v]) => `    ${k}=${pyLit(v).replace(/\n/g, " ")},`).join("\n")}\n)`;
+    case "python": return `import os\nimport complystack\n\ncs = complystack.Client(api_key=os.environ["COMPLYSTACK_KEY"])\nresult = cs.${parts.map((p) => p.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase())).join(".")}(\n${a.map(([k, v]) => `    ${k}=${pyLit(v).replace(/\n/g, " ")},`).join("\n")}\n)`;
     case "java": return `ComplyStack cs = new ComplyStack(System.getenv("COMPLYSTACK_KEY"));\nvar params = ${pascal(parts[parts.length - 1])}Params.builder()\n${a.map(([k, v]) => `    .${camel(k)}(${typeof v === "object" ? `Map.of(${Object.entries(v).map(([x, y]) => `"${x}", ${JSON.stringify(y)}`).join(", ")})` : JSON.stringify(v)})`).join("\n")}\n    .build();\nvar result = cs.${parts.slice(0, -1).map((p) => camel(p) + "()").join(".")}.${camel(parts[parts.length - 1])}(params);`;
     case "php": return `<?php\n$cs = new \\ComplyStack\\Client(getenv("COMPLYSTACK_KEY"));\n$result = $cs->${parts.slice(0, -1).join("->")}${parts.length > 1 ? "->" : ""}${camel(parts[parts.length - 1])}(${phpLit(Object.fromEntries(a))});`;
     case "go": return `cs := complystack.NewClient(os.Getenv("COMPLYSTACK_KEY"))\nresult, err := cs.${parts.map(pascal).join(".")}(ctx, &complystack.${pascal(parts[parts.length - 1])}Params{\n${a.map(([k, v]) => `    ${pascal(k)}: ${goLit(v)},`).join("\n")}\n})`;
