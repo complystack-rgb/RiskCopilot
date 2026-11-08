@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 from pathlib import Path
 import os
+import asyncio
 import re
 import uuid
 import random
@@ -100,10 +101,21 @@ async def push(cid, update, event):
     return await get_case(cid)
 
 
+async def warm_geo(points):
+    for lat, lon in points:
+        for kind, fn in (("surroundings", geo.surroundings), ("climate", geo.climate)):
+            try:
+                await cached(kind, lat, lon, fn)
+            except Exception:
+                pass
+
+
 @app.on_event("startup")
 async def startup():
     await seed(db)
     await db.cases.create_index("lead_id", unique=True)
+    pts = [(c["sme"]["lat"], c["sme"]["lon"]) async for c in db.cases.find({}, {"sme.lat": 1, "sme.lon": 1})]
+    asyncio.create_task(warm_geo(pts))
 
 
 @api.get("/")
@@ -265,6 +277,7 @@ async def create_case(body: SmeSubmit):
     await db.cases.insert_one(dict(c))
     agent = next(a for a in agents if a["id"] == c["agent_id"])
     org = await db.orgs.find_one({"id": c["distributor_id"]}, NO_ID)
+    asyncio.create_task(warm_geo([(c["sme"]["lat"], c["sme"]["lon"])]))
     return {"lead_id": c["lead_id"], "case_id": c["id"], "distributor": org["name"], "agent": agent["name"], "sla_due": c["sla_due"]}
 
 
@@ -430,7 +443,7 @@ async def cached(kind, lat, lon, fn):
         data = await fn(lat, lon)
     except Exception as e:
         raise HTTPException(502, f"Open data service unavailable: {e.__class__.__name__}")
-    if kind != "surroundings" or data.get("available"):
+    if kind != "surroundings" or (data.get("available") and data.get("counts")):
         await db.geo_cache.update_one({"_id": key}, {"$set": {"data": data}}, upsert=True)
     return data
 

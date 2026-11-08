@@ -35,19 +35,24 @@ const AddAgent = ({ orgId, onDone }) => {
 };
 
 export default function Team() {
-  const { persona, meta, loadMeta } = useConsole();
-  const orgId = persona.org_id;
+  const { persona, meta, loadMeta, isAdmin, isUnderwriter, market } = useConsole();
+  const brokers = meta.orgs.filter((o) => o.market === market && o.type !== "Insurer");
+  const [pick, setPick] = useState("");
+  const orgId = isUnderwriter ? (brokers.find((o) => o.id === pick) || brokers[0])?.id : persona.org_id;
   const [rows, setRows] = useState([]);
-  const load = useCallback(() => api.get("/agents/workload", { params: { org_id: orgId } }).then((r) => setRows(r.data)), [orgId]);
+  const load = useCallback(() => { if (orgId) api.get("/agents/workload", { params: { org_id: orgId } }).then((r) => setRows(r.data)); }, [orgId]);
   useEffect(() => { load(); }, [load]);
   const org = meta.orgs.find((o) => o.id === orgId);
   const toggle = async (a) => { await api.patch(`/agents/${a.id}`, { active: !a.active }); toast.success(`${a.name} ${a.active ? "deactivated" : "reactivated"}`); load(); loadMeta(); };
-  if (persona.role !== "admin") return <Navigate to="/console" replace />;
+  if (!isAdmin || !org) return <Navigate to="/console" replace />;
 
   return (
     <div className="space-y-6">
-      <PageHead eyebrow="Distribution partner" title="Team & workload" sub="Onboard agents, see their caseload and switch off access when someone leaves."
-        right={<div className="flex gap-2"><AddAgent orgId={orgId} onDone={() => { load(); loadMeta(); }} /></div>} />
+      <PageHead eyebrow={isUnderwriter ? "Insurer admin" : "Distribution partner"} title="Team & workload" sub="Onboard agents, see their caseload and switch off access when someone leaves."
+        right={<div className="flex gap-2">
+          {isUnderwriter && <Select value={orgId} onValueChange={setPick}><SelectTrigger data-testid="team-org-select" className="w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>{brokers.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent></Select>}
+          <AddAgent orgId={orgId} onDone={() => { load(); loadMeta(); }} /></div>} />
       <div className="grid gap-3 sm:grid-cols-4">
         {[["Organisation", org.name], ["Type", org.type], ["Licence", org.licence], ["Head office", org.city]].map(([k, v]) => (
           <div key={k} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><p className="text-[10px] uppercase tracking-wider text-slate-400">{k}</p><p className="mt-1 text-sm font-semibold text-slate-900">{v}</p></div>

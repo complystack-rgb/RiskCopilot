@@ -6,7 +6,7 @@ from markets import MARKETS, IMAGES, CATEGORIES
 
 COORDS = {"in1": (21.0870, 72.8820), "in2": (22.7680, 75.8480), "in3": (18.6290, 73.8480), "in4": (30.9578, 76.7914), "in5": (11.1300, 77.3200), "in6": (19.2813, 73.0483),
           "my1": (5.2970, 100.2690), "my2": (3.0560, 101.5420), "my3": (1.4700, 103.9000), "my4": (2.9590, 101.3260), "my5": (2.2050, 102.2470), "my6": (3.1000, 101.6800),
-          "id1": (-6.9400, 107.5700), "id2": (-6.6300, 110.7000), "id3": (-3.6900, 98.6700), "id4": (-7.3300, 112.7700), "id5": (-6.3000, 107.0600), "id6": (-8.6500, 115.2100)}
+          "id1": (-6.9400, 107.5700), "id2": (-6.6300, 110.7000), "id3": (3.5950, 98.6720), "id4": (-7.3300, 112.7700), "id5": (-6.3000, 107.0600), "id6": (-8.6500, 115.2100)}
 DIGITAL = ("electronics", "e-commerce", "logistics", "pharma", "warehousing")
 NO_SHIP = ("warehousing", "logistics")
 GENERIC = [("Hydrant point seen, no pressure gauge reading in frame", "Moderate", "Ask for the last hydrant pressure test certificate"),
