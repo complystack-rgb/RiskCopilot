@@ -8,7 +8,7 @@ const NAV = [
   { to: "/console", end: true, label: "Overview", icon: Icons.LayoutDashboard },
   { to: "/console/cases", label: "Cases", icon: Icons.FolderKanban },
   { to: "/console/team", label: "Team", icon: Icons.Users, admin: true },
-  { to: "/console/developers", label: "Developer portal", icon: Icons.Code2 },
+  { to: "/console/developers", label: "Developer portal", icon: Icons.Code2, uw: true },
 ];
 
 const GeoSwitcher = () => {
@@ -36,13 +36,13 @@ const PersonaSwitcher = () => {
           <div className="hidden min-w-0 leading-tight sm:block"><p className="truncate text-xs font-semibold text-slate-900">{persona.name}</p><p className="truncate text-[10px] text-slate-500">{persona.title}</p></div>
         </div>
       </SelectTrigger>
-      <SelectContent>{personas.map((p) => <SelectItem key={p.id} value={p.id} data-testid={`persona-option-${p.id}`}>{p.name} · {p.role === "admin" ? "Admin" : "Agent"}</SelectItem>)}</SelectContent>
+      <SelectContent>{personas.map((p) => <SelectItem key={p.id} value={p.id} data-testid={`persona-option-${p.id}`}>{p.name} · {p.role === "underwriter" ? "Underwriter" : p.role === "admin" ? "Admin" : "Agent"}</SelectItem>)}</SelectContent>
     </Select>
   );
 };
 
 const Shell = () => {
-  const { meta, persona, m } = useConsole();
+  const { meta, persona, m, isAdmin, isUnderwriter } = useConsole();
   if (!meta) return <p className="p-8 text-sm text-slate-500">Loading…</p>;
   return (
     <div className="min-h-screen bg-[#F5F7FB]">
@@ -52,9 +52,9 @@ const Shell = () => {
       </header>
       <div className="flex">
         <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-56 shrink-0 flex-col bg-[#0A1F44] px-3 py-5 md:flex">
-          <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-blue-200/60">Broker workspace</p>
+          <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-blue-200/60">{isUnderwriter ? "Insurer workspace" : "Broker workspace"}</p>
           <nav className="mt-2 space-y-0.5">
-            {NAV.filter((n) => !n.admin || persona?.role === "admin").map((n) => (
+            {NAV.filter((n) => (!n.admin || isAdmin) && (!n.uw || isUnderwriter)).map((n) => (
               <NavLink key={n.to} to={n.to} end={n.end} data-testid={`nav-${n.label.toLowerCase().replace(/\s+/g, "-")}`}
                 className={({ isActive }) => `flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm transition-colors ${isActive ? "bg-white/10 font-semibold text-white" : "text-blue-100/70 hover:bg-white/5 hover:text-white"}`}>
                 <n.icon className="h-4 w-4" />{n.label}
@@ -68,7 +68,7 @@ const Shell = () => {
           </div>
         </aside>
         <nav className="fixed inset-x-0 bottom-0 z-50 flex justify-around border-t border-slate-200 bg-white py-1.5 md:hidden" data-testid="mobile-nav">
-          {NAV.filter((n) => !n.admin || persona?.role === "admin").map((n) => (
+          {NAV.filter((n) => (!n.admin || isAdmin) && (!n.uw || isUnderwriter)).map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium ${isActive ? "text-[#0A1F44]" : "text-slate-400"}`}><n.icon className="h-5 w-5" />{n.label.split(" ")[0]}</NavLink>
           ))}
         </nav>

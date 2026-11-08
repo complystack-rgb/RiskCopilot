@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "@/lib/api";
@@ -69,7 +70,8 @@ const Sandbox = () => {
 };
 
 export default function DeveloperPortal() {
-  const { m } = useConsole();
+  const { m, isUnderwriter, persona } = useConsole();
+  if (persona && !isUnderwriter) return <Navigate to="/console" replace />;
   return (
     <div className="space-y-6">
       <PageHead eyebrow="For insurer IT and underwriting" title="Developer portal" sub={`${m.insurer} systems read every case and send decisions through these APIs. Underwriters work in their own tools.`} />

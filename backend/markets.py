@@ -42,6 +42,13 @@ ORGS = [
     {"id": "org-lumen", "market": "MY", "name": "Lumen Insurance Brokers Sdn Bhd", "type": "Broking firm", "city": "Kuala Lumpur", "licence": "BNM IB-0291"},
     {"id": "org-nusantara", "market": "ID", "name": "PT Nusantara Proteksi Broker", "type": "Broking firm", "city": "Jakarta", "licence": "OJK KEP-118/NB.1/2020"},
 ]
+
+INSURER_ORGS = [
+    {"id": "ins-in", "market": "IN", "name": "ABC Insure India", "type": "Insurer", "city": "Mumbai", "licence": "IRDAI Reg. No. 190"},
+    {"id": "ins-my", "market": "MY", "name": "ABC Insure Malaysia Berhad", "type": "Insurer", "city": "Kuala Lumpur", "licence": "BNM Licensed Insurer"},
+    {"id": "ins-id", "market": "ID", "name": "PT ABC Insure Indonesia", "type": "Insurer", "city": "Jakarta", "licence": "OJK KEP-071/D.05/2019"},
+]
+UNDERWRITERS = [("ins-in", "Arjun Rao", "Mumbai"), ("ins-my", "Mei Ling Wong", "Kuala Lumpur"), ("ins-id", "Sari Wijaya", "Jakarta")]
 AGENTS = [
     ("org-bharat", "Ritika Mehta", "admin", "Mumbai"), ("org-bharat", "Imran Shaikh", "agent", "Surat"), ("org-bharat", "Nikhil Patil", "agent", "Pune"),
     ("org-kavach", "Lakshmi Narayanan", "admin", "Coimbatore"), ("org-kavach", "Karthik Raja", "agent", "Tiruppur"),

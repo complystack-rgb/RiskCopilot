@@ -25,6 +25,9 @@ A white-label insurance platform (demo brand "ABC Insure", Powered by ComplyStac
 - The backend stores `sme.registration`, routes the case to that market's org and agents, and uses per-market lead prefixes. Opening a case in the console switches the console to that case's market.
 - Copy cleanup across Steps 1 to 6: Title Case labels, no dashes, no filler text.
 
+## Roles (2026-11)
+- Field agent: own cases. Broker admin: own org cases and Team. Insurer underwriter (one per market, org ins-in/ins-my/ins-id): all cases in market, Team for any broker org, and the only role with the Developer Portal. Gating is UI only (no real login yet).
+
 ## Illustrative vs live
 - ILLUSTRATIVE: evidence findings, plate readings, premiums, testimonials, portfolio history, peer stats.
 - LIVE: address search, map surroundings (Overpass via the maps.mail.ru mirror), climate history, elevation.

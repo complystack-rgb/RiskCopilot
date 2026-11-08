@@ -23,13 +23,13 @@ const TABS = [["summary", "Summary", Icons.FileBarChart], ["location", "Location
 const Meta = ({ label, children }) => <div><p className="text-[10px] uppercase tracking-wider text-slate-400">{label}</p><div className="mt-0.5 text-sm font-medium text-slate-900">{children}</div></div>;
 
 const Actions = ({ c, onUpdate }) => {
-  const { persona, meta } = useConsole();
+  const { persona, meta, isAdmin } = useConsole();
   const run = async (path, body, msg) => { try { const { data } = await api.post(`/cases/${c.id}/${path}`, { ...body, actor: persona.name }); onUpdate(data); toast.success(msg); } catch (e) { toast.error(errMsg(e)); } };
   const agents = meta.agents.filter((a) => a.active && a.role === "agent" && a.org_id === c.distributor_id);
   const open = !["bound", "lost"].includes(c.status);
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {persona.role === "admin" && open && (
+      {isAdmin && open && (
         <Select value={c.agent_id} onValueChange={(v) => run("assign", { agent_id: v }, "Case reassigned")}>
           <SelectTrigger data-testid="reassign-select" className="h-9 w-[190px] bg-white text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>{agents.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
